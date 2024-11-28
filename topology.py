@@ -1,6 +1,7 @@
 from mininet.net import Mininet
 from mininet.node import RemoteController, OVSSwitch
 from mininet.link import TCLink
+from mininet.node import Docker
 
 def create_topology():
     # Création du réseau
@@ -14,14 +15,12 @@ def create_topology():
     switchB = net.addSwitch('sB')
     switchC = net.addSwitch('sC')
 
-    # Ajout des gateways
-    gatewayIntermediaire = net.addHost('gI', ip='10.0.0.1/24')
-    gatewayFinal1 = net.addHost('gF1', ip='10.0.0.2/24')
-    gatewayFinal2 = net.addHost('gF2', ip='10.0.0.3/24')
-    gatewayFinal3 = net.addHost('gF3', ip='10.0.0.4/24')
-
-    # Ajout du datacenter
-    datacenter = net.addHost('dc', ip='10.0.0.5/24')
+    # Ajout des conteneurs Docker pour les gateways et le datacenter
+    gatewayIntermediaire = net.addDocker('gI', dimage='gateway_intermediaire_image')
+    gatewayFinal1 = net.addDocker('gF1', dimage='gateway_final1_image')
+    gatewayFinal2 = net.addDocker('gF2', dimage='gateway_final2_image')
+    gatewayFinal3 = net.addDocker('gF3', dimage='gateway_final3_image')
+    datacenter = net.addDocker('dc', dimage='datacenter_image')
 
     # Création des liens
     net.addLink(switchA, switchB)
