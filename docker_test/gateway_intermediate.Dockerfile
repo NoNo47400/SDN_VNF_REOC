@@ -8,4 +8,4 @@ WORKDIR /usr/src/app
 COPY gateway.js .
 
 # Command to run the application
-CMD ["node", "gateway.js"]
+CMD ["node", "gateway.js", "--local_ip", "127.0.0.1", "--local_port", "8181", "--local_name", "${GWI_NAME}", "--remote_ip", "127.0.0.1", "--remote_port", "8080", "--remote_name", "srv"]

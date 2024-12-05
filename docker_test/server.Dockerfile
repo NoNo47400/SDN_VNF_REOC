@@ -8,4 +8,4 @@ WORKDIR /usr/src/app
 COPY server.js .
 
 # Command to run the server
-CMD ["node", "server.js"]
+CMD ["node", "server.js", "--local_ip", "0.0.0.0", "--local_port", "8080", "--local_name", ${SRV_NAME}]

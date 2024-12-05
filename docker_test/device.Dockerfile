@@ -8,4 +8,4 @@ WORKDIR /usr/src/app
 COPY device.js .
 
 # Command to run the application
-CMD ["node", "device.js"]
+CMD ["node", "device.js", "--local_ip", "0.0.0.0", "--local_port", "9001", "--local_name", "${DEVICE_NAME}", "--remote_ip", "127.0.0.1", "--remote_port", "8282", "--remote_name", "gwf1", "--send_period", "3000"]
