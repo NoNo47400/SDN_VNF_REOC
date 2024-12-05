@@ -5,7 +5,7 @@ FROM node:alpine
 WORKDIR /usr/src/app
 
 # Copy the JavaScript program file into the container
-COPY Device.js .
+COPY device.js .
 
 # Command to run the application
-CMD ["node", "Device.js"]
+CMD ["node", "device.js"]

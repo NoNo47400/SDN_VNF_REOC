@@ -5,7 +5,7 @@ FROM node:alpine
 WORKDIR /usr/src/app
 
 # Copy the JavaScript program file into the container
-COPY Gateway.js .
+COPY gateway.js .
 
 # Command to run the application
-CMD ["node", "Gateway.js"]
+CMD ["node", "gateway.js"]
