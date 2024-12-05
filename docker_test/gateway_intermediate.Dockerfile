@@ -4,6 +4,12 @@ FROM node:alpine
 # Set the working directory
 WORKDIR /usr/src/app
 
+# Install dependencies
+RUN npm install express
+RUN npm install request
+RUN npm install systeminformation
+RUN npm install yargs
+
 # Copy the JavaScript program file into the container
 COPY gateway.js .
 
