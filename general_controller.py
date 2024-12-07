@@ -1,59 +1,138 @@
+from flask import Flask, jsonify, request
+import time
+import json
 import requests
 
-# TOUT FAUX
-# Voir ça https://github.com/containernet/vim-emu/wiki/APIs
+#voir API REST pour vim-emu
+#voir comment parler au sdn controller
 
-# A faire
-VIM = "http://<VIM_IP>:<VIM_PORT>"
-SDN_CONTROLLER = "http://<SDN_CONTROLLER_IP>:<SDN_CONTROLLER_PORT>"
-VNF_MONITORING = "http://<VNF_MONITORING_IP>:<VNF_MONITORING_PORT>"
 
-# Fonction pour créer un VNF
-def create_vnf(vnf_type):
-    response = requests.post(f"{VIM}/vnf/create", json={"type": vnf_type})
-    return response.json()
+app = Flask(__name__)
 
-# Fonction pour rediriger le trafic
-def redirect_traffic(source, destination, source_ip=None):
-    data = {"source": source, "destination": destination}
-    if source_ip:
-        data["source_ip"] = source_ip
-    response = requests.post(f"{SDN_CONTROLLER}/traffic/redirect", json=data)
-    return response.json()
+# On redigrige tous les paquets à destination de gwi, à la destination du vnf
+def modify_route_gf_to_vnf():
+    # URL de l'API REST
+    url = "http://localhost:8080/stats/flowentry/modify"
 
-# Fonction pour obtenir les données de trafic du VNF Monitoring
-def get_traffic_data():
-    response = requests.get(f"{VNF_MONITORING}/traffic/data")
-    return response.json()
+    # Les données JSON à envoyer
+    data = {
+        "dpid": 1,
+        "cookie": 1,
+        "cookie_mask": 1,
+        "table_id": 0,
+        "idle_timeout": 30,
+        "hard_timeout": 30,
+        "priority": 11111,
+        "flags": 1,
+        "match": {
+            "nw_dst": "10.0.0.1" # adresse du gwi
+        },
+        "actions": [
+            {
+                "nw_dst": "10.0.0.200", # adresse du vnf
+            }
+        ]
+    # Envoi de la requête POST
+    response = requests.post(url, json=data)
 
-# Créer un VNF pour le monitoring
-vnf_monitoring = create_vnf("monitoring")
-print(f"Created VNF Monitoring: {vnf_monitoring}")
+    # Gestion de la réponse
+    if response.status_code == 200:
+        print("Flow entry successfully modified!")
+        print("Response:", response.json())  # Affiche la réponse du serveur
+    else:
+        print("Failed to modify flow entry.")
+        print(f"Status Code: {response.status_code}, Response: {response.text}")
+}
 
-# Rediriger le trafic vers le VNF Monitoring
-redirect_traffic("Gateway_Intermediaire", vnf_monitoring["id"])
-print("Traffic redirected to VNF Monitoring")
 
-# Rediriger le trafic du VNF Monitoring vers la Gateway Intermédiaire
-redirect_traffic(vnf_monitoring["id"], "Gateway_Intermediaire")
-print("Traffic redirected from VNF Monitoring to Gateway Intermediaire")
+def modify_route_vnf_to_gf():
+    # URL de l'API REST
+    url = "http://localhost:8080/stats/flowentry/modify"
 
-# Obtenir les données de trafic du VNF Monitoring
-traffic_data = get_traffic_data()
-print(f"Traffic data: {traffic_data}")
+    # Les données JSON à envoyer
+    data = {
+        "dpid": 1,
+        "cookie": 1,
+        "cookie_mask": 1,
+        "table_id": 0,
+        "idle_timeout": 30,
+        "hard_timeout": 30,
+        "priority": 11111,
+        "flags": 1,
+        "match": {
+            "nw_src": "10.0.0.200" # adresse du vnf
+            "nw_dst": {"10.0.0.10", "10.0.0.20", "10.0.0.30"} # adresses des gf
+        },
+        "actions": [
+            {
+                "nw_src": "10.0.0.1", # adresse du gwi
+            }
+        ]
+    # Envoi de la requête POST
+    response = requests.post(url, json=data)
 
-# Créer un VNF pour la Gateway Intermédiaire 2
-vnf_gateway = create_vnf("gateway")
-print(f"Created VNF Gateway Intermediaire 2: {vnf_gateway}")
+    # Gestion de la réponse
+    if response.status_code == 200:
+        print("Flow entry successfully modified!")
+        print("Response:", response.json())  # Affiche la réponse du serveur
+    else:
+        print("Failed to modify flow entry.")
+        print(f"Status Code: {response.status_code}, Response: {response.text}")
+}
 
-# Trouver la source avec le trafic le plus élevé
-max_source = max(traffic_data, key=lambda x: x['traffic'])
-print(f"Source with highest traffic: {max_source}")
 
-# Rediriger le trafic de la Gateway Intermédiaire vers la Gateway Intermédiaire 2 pour la source avec le trafic le plus élevé
-redirect_traffic("Gateway_Intermediaire", vnf_gateway["id"], source_ip=max_source["source"])
-print("Traffic redirected from Gateway Intermediaire to Gateway Intermediaire 2")
+# Pour créer la VNF, ATTENTION, mettre la bonne adresse IP
+@app.route('/new_vnf', methods=['GET'])
+def create_vnf():
+    url = "http://127.0.0.1:5001/restapi/compute/cvim1/new_vnf"
+    headers = {
+        "Content-Type": "application/json"
+    }
+    data = {
+        "image": "ubuntu:trusty",
+        "network": "(id=input,ip=10.0.0.1/24),(id=output,ip=20.0.0.1/24)"
+    }
 
-# Rediriger le trafic de la Gateway Intermédiaire 2 vers l'application
-redirect_traffic(vnf_gateway["id"], "application")
-print("Traffic redirected from Gateway Intermediaire 2 to application")
+    try:
+        # Envoyer la requête PUT à l'API cible
+        response = requests.put(url, headers=headers, json=data)
+
+        if response.status_code == 200:
+            response_sdn = modify_route_gf_to_vnf()
+            if response_sdn.status_code == 200:
+                response_sdn = modify_route_vnf_to_gf()
+                if response_sdn.status_code == 200:
+                    return jsonify({"status": "success", "message": "VNF created successfully! and Redirection is good!"}), 200
+                else:
+                    return jsonify({
+                        "status": "failure",
+                        "message": "Failed to redirect with SDN vnf to gf",
+                        "details": response.text
+                    }), response.status_code
+            else:
+                return jsonify({
+                    "status": "failure",
+                    "message": "Failed to redirect with SDN gf to vnf",
+                    "details": response.text
+                }), response.status_code
+        else:
+            return jsonify({
+                "status": "failure",
+                "message": "Failed to create VNF.",
+                "details": response.text
+            }), response.status_code
+
+    except requests.exceptions.RequestException as e:
+        # En cas d'erreur réseau ou autre exception
+        return jsonify({
+            "status": "failure",
+            "message": "An error occurred while communicating with the API.",
+            "error": str(e)
+        }), 500
+
+## Pour ajouter redirection, il faut trouver un moyen de, après etre passé par la vnf, rediriger tout le signal soit vers la gwi soit vers la gwi2 que l'on va créer 
+## tout ça dépendamment de l'adresse du gf source que l'on a plus vu que c'est celle de la vnf qui apparait maintenant
+
+# Lancer le serveur Flask
+if __name__ == '__main__':
+    app.run(host='127.0.0.1', port=1234, debug=True)

@@ -4,18 +4,24 @@ import json
 import requests
 
 app = Flask(__name__)
-local_ip = "0.0.0.0"
-local_port = 5000
-# Recopier infos de la gateway intermediaire pour se faire passer pour elle
+
+# Il faut que le general controller s'adresse à nous via l'adresse IP exterieur du docker
+# Il faut que ce monitoring vnf envoie les infos vers la gwi
+# Les paquets qui vont être reçu ici sont modifié avant par le SDN controller afin que les paquets qui ont à la base dest_ip = gwi_ip et dest_port = gwi_port deviennent dest_ip = monitoring_vnf_ip et dest_port = monitoring_vnf_port
+local_ip = "10.0.0.200"
+local_port = 8181  # même port que le gwi pour pas avoir à modifier depuis vnf
+
+gwi_ip = "10.0.0.1"
+
 packet_count = {
-    "192.168.1.1": 0,
-    "192.168.2.1": 0,
-    "192.168.3.1": 0
+    "10.0.0.10": 0,
+    "10.0.0.20": 0,
+    "10.0.0.30": 0
 }
 bitrate = {
-    "192.168.1.1": 0,
-    "192.168.2.1": 0,
-    "192.168.3.1": 0
+    "10.0.0.10": 0,
+    "10.0.0.20": 0,
+    "10.0.0.30": 0
 }
 start_time = time.time()
 
@@ -28,7 +34,7 @@ def increment_packet_count(addr):
 def gateways_register():
     global packet_count
     increment_packet_count(request.remote_addr)
-    resp = requests.post(request.url, json=request.json)
+    resp = requests.post(gwi_ip + "/gateways/register", json=request.json)
     return resp
     
 # J'intercepte le POST à direction de gwi et ajoute au compteur que j'ai vu une trame passé, puis je transmet la donnée recu pour rester invisible au yeux du gwi et du gwf
@@ -36,7 +42,7 @@ def gateways_register():
 def devices_register():
     global packet_count
     increment_packet_count(request.remote_addr)
-    resp = requests.post(request.url, json=request.json)
+    resp = requests.post(gwi_ip + "/devices/register", json=request.json)
     return resp
 
 # J'intercepte le POST à direction de gwi et ajoute au compteur que j'ai vu une trame passé, puis je transmet la donnée recu pour rester invisible au yeux du gwi et du gwf
@@ -44,7 +50,7 @@ def devices_register():
 def device_data(dev):
     global packet_count
     increment_packet_count(request.remote_addr)
-    resp = requests.post(request.url, json=request.json)
+    resp = requests.post(gwi_ip + "/device/<dev>/data", json=request.json)
     return resp
 
 # J'intercepte le GET à direction de gwi et ajoute au compteur que j'ai vu une trame passé, puis je transmet la donnée recu pour rester invisible au yeux du gwi et du gwf
@@ -52,7 +58,7 @@ def device_data(dev):
 def get_gateways():
     global packet_count
     increment_packet_count(request.remote_addr)
-    resp = requests.get(request.url)
+    resp = requests.get(gwi_ip + "/gateways")
     return resp
 
 # J'intercepte le GET à direction de gwi et ajoute au compteur que j'ai vu une trame passé, puis je transmet la donnée recu pour rester invisible au yeux du gwi et du gwf
@@ -60,7 +66,7 @@ def get_gateways():
 def get_gateway(gw):
     global packet_count
     increment_packet_count(request.remote_addr)
-    resp = requests.get(request.url)
+    resp = requests.get(gwi_ip + "/gateway/<gw>")
     return resp
 
 # J'intercepte le GET à direction de gwi et ajoute au compteur que j'ai vu une trame passé, puis je transmet la donnée recu pour rester invisible au yeux du gwi et du gwf
@@ -68,7 +74,7 @@ def get_gateway(gw):
 def ping():
     global packet_count
     increment_packet_count(request.remote_addr)
-    resp = requests.get(request.url)
+    resp = requests.get(gwi_ip + "/ping")
     return resp
 
 # J'intercepte le GET à direction de gwi et ajoute au compteur que j'ai vu une trame passé, puis je transmet la donnée recu pour rester invisible au yeux du gwi et du gwf
@@ -76,11 +82,11 @@ def ping():
 def health():
     global packet_count
     increment_packet_count(request.remote_addr)
-    resp = requests.get(request.url)
+    resp = requests.get(gwi_ip + "/health")
     return resp
 
 # Pour calculer le nombre de bytes en un temps x -> possibilité d'avoir le débit
-def calculate_throughput():
+def calculate_bitrate():
     global bitrate, packet_count, start_time
     elapsed_time = time.time() - start_time
     for ip in packet_count:
@@ -93,12 +99,12 @@ def calculate_throughput():
 @app.route('/bitrate', methods=['GET'])
 def get_throughput():
     global bitrate
-    return jsonify({"bitrate_gf1": bitrate[0], "bitrate_gf2": bitrate[1], "bitrate_gf2": bitrate[2]})
+    return jsonify(bitrate)
 
 # Fonction principale
 def main():
     while True:
-        calculate_throughput()
+        calculate_bitrate()
         time.sleep(100)
 
 
