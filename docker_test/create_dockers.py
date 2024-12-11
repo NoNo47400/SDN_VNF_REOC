@@ -37,6 +37,7 @@ services = {
     'dev1_gf3': ('device.Dockerfile', '172.18.0.31'),
     'dev2_gf3': ('device.Dockerfile', '172.18.0.32'),
     'dev3_gf3': ('device.Dockerfile', '172.18.0.33'),
+    'vnf_monitoring': ('vnf_monitoring.Dockerfile', '172.18.0.200'),
 }
 
 # Base directory for Dockerfiles
@@ -68,12 +69,14 @@ def build_and_run_images():
             build_arg_name = 'APP_DEVICE_NAME'
         elif 'device' in service:
             build_arg_name = 'DEVICE_NAME'
-        elif 'gateway_finale' in service:
+        elif 'gateway_final' in service:
             build_arg_name = 'GWF_NAME'
         elif 'gateway_intermediaire' in service:
             build_arg_name = 'GWI_NAME'
         elif 'server' in service:
             build_arg_name = 'SRV_NAME'
+        elif 'monitoring_vnf' in service:
+            build_arg_name = 'VNF_MONITORING_NAME'
 
         # Build the Docker image
         print(f'Building {image_name} from {dockerfile_path} with {build_arg_name}={service}')
@@ -84,13 +87,13 @@ def build_and_run_images():
         ], check=True)
 
         # Run the Docker container with a specific IP address
-        container_name = f'{service}-container'
-        print(f'Running {container_name} with IP {ip_address}')
-        subprocess.run([
-            'docker', 'run', '-d', '--name', container_name,
-            '--network', network_name, '--ip', ip_address,
-            image_name
-        ], check=True)
+        # container_name = f'{service}-container'
+        # print(f'Running {container_name} with IP {ip_address}')
+        # subprocess.run([
+        #     'docker', 'run', '-d', '--name', container_name,
+        #     '--network', network_name, '--ip', ip_address,
+        #     image_name
+        # ], check=True)
 
 if __name__ == "__main__":
     kill_all_docker_containers()

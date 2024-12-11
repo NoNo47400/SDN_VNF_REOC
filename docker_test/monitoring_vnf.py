@@ -9,7 +9,7 @@ app = Flask(__name__)
 # Il faut que ce monitoring vnf envoie les infos vers la gwi
 # Les paquets qui vont être reçu ici sont modifié avant par le SDN controller afin que les paquets qui ont à la base dest_ip = gwi_ip et dest_port = gwi_port deviennent dest_ip = monitoring_vnf_ip et dest_port = monitoring_vnf_port
 local_ip = "10.0.0.200"
-local_port = 8181  # même port que le gwi pour pas avoir à modifier depuis vnf
+local_port = 8181  # même port que le gwi pour pas avoir à modifier depuis sdn
 
 gwi_ip = "10.0.0.1"
 

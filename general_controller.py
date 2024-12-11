@@ -32,6 +32,7 @@ def modify_route_gf_to_vnf():
                 "nw_dst": "10.0.0.200", # adresse du vnf
             }
         ]
+    }
     # Envoi de la requête POST
     response = requests.post(url, json=data)
 
@@ -42,7 +43,7 @@ def modify_route_gf_to_vnf():
     else:
         print("Failed to modify flow entry.")
         print(f"Status Code: {response.status_code}, Response: {response.text}")
-}
+
 
 
 def modify_route_vnf_to_gf():

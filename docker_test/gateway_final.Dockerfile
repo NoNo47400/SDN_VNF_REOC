@@ -13,6 +13,8 @@ RUN npm install yargs
 # Install bash (necessary for debugging or running commands interactively)
 RUN apk add --no-cache bash
 
+EXPOSE 8282
+
 # Copy the JavaScript program file into the container
 COPY gateway.js .
 
