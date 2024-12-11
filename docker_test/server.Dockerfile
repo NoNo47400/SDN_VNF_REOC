@@ -10,6 +10,9 @@ RUN npm install request
 RUN npm install systeminformation
 RUN npm install yargs
 
+# Install bash (necessary for debugging or running commands interactively)
+RUN apk add --no-cache bash
+
 # Copy the JavaScript program file into the container
 COPY server.js .
 

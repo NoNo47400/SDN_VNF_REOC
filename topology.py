@@ -44,30 +44,30 @@ def create_topology():
     switch3 = net.addSwitch('s3')
 
     # Ajout des conteneurs Docker pour les gateways et le datacenter
-    gatewayIntermediaire = net.addDocker('gI', ip='10.0.0.1', dimage='gateway_intermediaire-image')
+    gatewayIntermediaire = net.addDocker('gI', ip='10.0.0.1/24', dimage='gateway_intermediaire-image')
     
-    app1 = net.addDocker('app1', ip='10.0.0.101', dimage='app1-image')
-    app2 = net.addDocker('app2', ip='10.0.0.102', dimage='app2-image')
-    app3 = net.addDocker('app3', ip='10.0.0.103', dimage='app3-image')
+    app1 = net.addDocker('app1', ip='10.0.0.101/24', dimage='app1-image')
+    app2 = net.addDocker('app2', ip='10.0.0.102/24', dimage='app2-image')
+    app3 = net.addDocker('app3', ip='10.0.0.103/24', dimage='app3-image')
 
-    server = net.addDocker('service', ip='10.0.0.100', dimage='server-image')
+    server = net.addDocker('service', ip='10.0.0.100/24', dimage='server-image')
     
     # PLUTOT METTRE ADRESSE A CHAQUE LIEN QUE CHAQUE MACHINE
     # il manque le serveur aussi
-    gatewayFinal1 = net.addDocker('gF1', ip='10.0.0.10', dimage='gateway_final1-image')
-    dev1_gF1 = net.addDocker('dev1_gF1', ip='10.0.0.11', dimage='dev1_gf1-image')
-    dev2_gF1 = net.addDocker('dev2_gF1', ip='10.0.0.12', dimage='dev2_gf1-image')
-    dev3_gF1 = net.addDocker('dev3_gF1', ip='10.0.0.13', dimage='dev3_gf1-image')
-    
-    gatewayFinal2 = net.addDocker('gF2', ip='10.0.0.20', dimage='gateway_final2-image')
-    dev1_gF2 = net.addDocker('dev1_gF2', ip='10.0.0.21', dimage='dev1_gf2-image')
-    dev2_gF2 = net.addDocker('dev2_gF2', ip='10.0.0.22', dimage='dev2_gf2-image')
-    dev3_gF2 = net.addDocker('dev3_gF2', ip='10.0.0.23', dimage='dev3_gf2-image')
+    gatewayFinal1 = net.addDocker('gF1', ip='10.0.0.10/24', dimage='gateway_final1-image')
+    dev1_gF1 = net.addDocker('dev1_gF1', ip='10.0.0.11/24', dimage='dev1_gf1-image')
+    dev2_gF1 = net.addDocker('dev2_gF1', ip='10.0.0.12/24', dimage='dev2_gf1-image')
+    dev3_gF1 = net.addDocker('dev3_gF1', ip='10.0.0.13/24', dimage='dev3_gf1-image')
 
-    gatewayFinal3 = net.addDocker('gF3', ip='10.0.0.30', dimage='gateway_final3-image')
-    dev1_gF3 = net.addDocker('dev1_gF3', ip='10.0.0.31', dimage='dev1_gf3-image')
-    dev2_gF3 = net.addDocker('dev2_gF3', ip='10.0.0.32', dimage='dev2_gf3-image')
-    dev3_gF3 = net.addDocker('dev3_gF3', ip='10.0.0.33', dimage='dev3_gf3-image')
+    gatewayFinal2 = net.addDocker('gF2', ip='10.0.0.20/24', dimage='gateway_final2-image')
+    dev1_gF2 = net.addDocker('dev1_gF2', ip='10.0.0.21/24', dimage='dev1_gf2-image')
+    dev2_gF2 = net.addDocker('dev2_gF2', ip='10.0.0.22/24', dimage='dev2_gf2-image')
+    dev3_gF2 = net.addDocker('dev3_gF2', ip='10.0.0.23/24', dimage='dev3_gf2-image')
+
+    gatewayFinal3 = net.addDocker('gF3', ip='10.0.0.30/24', dimage='gateway_finale3-image')
+    dev1_gF3 = net.addDocker('dev1_gF3', ip='10.0.0.31/24', dimage='dev1_gf3-image')
+    dev2_gF3 = net.addDocker('dev2_gF3', ip='10.0.0.32/24', dimage='dev2_gf3-image')
+    dev3_gF3 = net.addDocker('dev3_gF3', ip='10.0.0.33/24', dimage='dev3_gf3-image')
 
     # Création des liens
     net.addLink(app1, server)
