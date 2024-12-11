@@ -1,14 +1,42 @@
 import os
 import subprocess
 
+def kill_all_docker_containers():
+    try:
+        # Obtenir la liste des conteneurs actifs
+        result = subprocess.run(["docker", "ps", "-q"], capture_output=True, text=True)
+        container_ids = result.stdout.strip().split("\n")
+
+        if not container_ids or container_ids == ['']:
+            print("Aucun conteneur en cours d'exécution.")
+            return
+
+        # Supprimer tous les conteneurs
+        subprocess.run(["docker", "rm", "-f"] + container_ids)
+        print("Tous les conteneurs ont été arrêtés et supprimés avec succès.")
+    except Exception as e:
+        print(f"Erreur lors de l'exécution : {e}")
+
+
 # List of Dockerfiles and corresponding image names and IP addresses
 services = {
-    'app1': ('application.Dockerfile', '172.18.0.2'),
-    'app2': ('application.Dockerfile', '172.18.0.3'),
-    'app3': ('application.Dockerfile', '172.18.0.4'),
-    'server': ('server.Dockerfile', '172.18.0.5'),
-    'gateway_intermediaire': ('gateway_intermediate.Dockerfile', '172.18.0.6'),
-    'gateway_finale1': ('gateway_final.Dockerfile', '172.18.0.7')
+    'app1': ('application.Dockerfile', '172.18.0.101'),
+    'app2': ('application.Dockerfile', '172.18.0.102'),
+    'app3': ('application.Dockerfile', '172.18.0.103'),
+    'server': ('server.Dockerfile', '172.18.0.100'),
+    'gateway_intermediaire': ('gateway_intermediate.Dockerfile', '172.18.0.2'),
+    'gateway_finale1': ('gateway_final.Dockerfile', '172.18.0.10'),
+    'dev1_gf1': ('device.Dockerfile', '172.18.0.11'),
+    'dev2_gf1': ('device.Dockerfile', '172.18.0.12'),
+    'dev3_gf1': ('device.Dockerfile', '172.18.0.13'),
+    'gateway_finale2': ('gateway_final.Dockerfile', '172.18.0.20'),
+    'dev1_gf2': ('device.Dockerfile', '172.18.0.21'),
+    'dev2_gf2': ('device.Dockerfile', '172.18.0.22'),
+    'dev3_gf2': ('device.Dockerfile', '172.18.0.23'),
+    'gateway_finale3': ('gateway_final.Dockerfile', '172.18.0.30'),
+    'dev1_gf3': ('device.Dockerfile', '172.18.0.31'),
+    'dev2_gf3': ('device.Dockerfile', '172.18.0.32'),
+    'dev3_gf3': ('device.Dockerfile', '172.18.0.33'),
 }
 
 # Base directory for Dockerfiles
@@ -16,14 +44,24 @@ base_dir = './'
 
 # Create a custom Docker network
 network_name = 'custom_net'
-subprocess.run(['docker', 'network', 'create', '--subnet=172.18.0.0/16', network_name], check=True)
+
+# Function to clean up existing Docker containers and images
+def cleanup_docker():
+    print("Cleaning up existing Docker containers...")
+    for service in services.keys():
+        container_name = f'{service}-container'
+        subprocess.run(['docker', 'rm', '-f', container_name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    print("Cleanup complete.")
 
 # Function to build Docker images and run containers
 def build_and_run_images():
+    # Ensure the custom network exists
+    subprocess.run(['docker', 'network', 'create', '--subnet=172.18.0.0/16', network_name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
     for service, (dockerfile, ip_address) in services.items():
         dockerfile_path = os.path.join(base_dir, dockerfile)
         image_name = f'{service}-image'
-        
+
         # Determine the build argument name based on the service
         build_arg_name = ''
         if 'app' in service:
@@ -55,4 +93,6 @@ def build_and_run_images():
         ], check=True)
 
 if __name__ == "__main__":
+    kill_all_docker_containers()
+    cleanup_docker()
     build_and_run_images()
