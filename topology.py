@@ -44,30 +44,30 @@ def create_topology():
     switch3 = net.addSwitch('s3')
 
     # Ajout des conteneurs Docker pour les gateways et le datacenter
-    gatewayIntermediaire = net.addDocker('gI', ip='10.0.0.1/24', dimage='gateway_intermediaire-image')
+    gatewayIntermediaire = net.addDocker('gI', ip='10.0.0.1/24', dimage='gateway_intermediaire-image', dcmd='node gateway.js --local_ip 127.0.0.1 --local_port 8181 --local_name gateway_intermediaire --remote_ip 127.0.0.1 --remote_port 8080 --remote_name srv')
     
-    app1 = net.addDocker('app1', ip='10.0.0.101/24', dimage='app1-image')
-    app2 = net.addDocker('app2', ip='10.0.0.102/24', dimage='app2-image')
-    app3 = net.addDocker('app3', ip='10.0.0.103/24', dimage='app3-image')
+    app1 = net.addDocker('app1', ip='10.0.0.101/24', dimage='app1-image', dcmd='node application.js --remote_ip 0.0.0.0 --remote_port 8080 --device_name application1 --send_period 5000')
+    app2 = net.addDocker('app2', ip='10.0.0.102/24', dimage='app2-image', dcmd='node application.js --remote_ip 0.0.0.0 --remote_port 8080 --device_name application2 --send_period 5000')
+    app3 = net.addDocker('app3', ip='10.0.0.103/24', dimage='app3-image', dcmd='node application.js --remote_ip 0.0.0.0 --remote_port 8080 --device_name application3 --send_period 5000')
 
-    server = net.addDocker('service', ip='10.0.0.100/24', dimage='server-image')
+    server = net.addDocker('service', ip='10.0.0.100/24', dimage='server-image', dcmd='node server.js --local_ip 0.0.0.0 --local_port 8080 --local_name service')
     
     # PLUTOT METTRE ADRESSE A CHAQUE LIEN QUE CHAQUE MACHINE
     # il manque le serveur aussi
-    gatewayFinal1 = net.addDocker('gF1', ip='10.0.0.10/24', dimage='gateway_final1-image')
-    dev1_gF1 = net.addDocker('dev1_gF1', ip='10.0.0.11/24', dimage='dev1_gf1-image')
-    dev2_gF1 = net.addDocker('dev2_gF1', ip='10.0.0.12/24', dimage='dev2_gf1-image')
-    dev3_gF1 = net.addDocker('dev3_gF1', ip='10.0.0.13/24', dimage='dev3_gf1-image')
+    gatewayFinal1 = net.addDocker('gF1', ip='10.0.0.10/24', dimage='gateway_final1-image', dcmd='node gateway.js --local_ip 0.0.0.0 --local_port 8282 --local_name gateway_final1 --remote_ip 127.0.0.1 --remote_port 8181 --remote_name gwi')
+    dev1_gF1 = net.addDocker('dev1_gF1', ip='10.0.0.11/24', dimage='dev1_gf1-image', dcmd='node device.js --local_ip 0.0.0.0 --local_port 9001 --local_name device_gf1_device1 --remote_ip 127.0.0.1 --remote_port 8282 --remote_name gwf1 --send_period 3000')
+    dev2_gF1 = net.addDocker('dev2_gF1', ip='10.0.0.12/24', dimage='dev2_gf1-image', dcmd='node device.js --local_ip 0.0.0.0 --local_port 9001 --local_name device_gf1_device2 --remote_ip 127.0.0.1 --remote_port 8282 --remote_name gwf1 --send_period 3000')
+    dev3_gF1 = net.addDocker('dev3_gF1', ip='10.0.0.13/24', dimage='dev3_gf1-image', dcmd='node device.js --local_ip 0.0.0.0 --local_port 9001 --local_name device_gf1_device3 --remote_ip 127.0.0.1 --remote_port 8282 --remote_name gwf1 --send_period 3000')
 
-    gatewayFinal2 = net.addDocker('gF2', ip='10.0.0.20/24', dimage='gateway_final2-image')
-    dev1_gF2 = net.addDocker('dev1_gF2', ip='10.0.0.21/24', dimage='dev1_gf2-image')
-    dev2_gF2 = net.addDocker('dev2_gF2', ip='10.0.0.22/24', dimage='dev2_gf2-image')
-    dev3_gF2 = net.addDocker('dev3_gF2', ip='10.0.0.23/24', dimage='dev3_gf2-image')
+    gatewayFinal2 = net.addDocker('gF2', ip='10.0.0.20/24', dimage='gateway_final2-image', dcmd='node gateway.js --local_ip 0.0.0.0 --local_port 8282 --local_name gateway_final1 --remote_ip 127.0.0.1 --remote_port 8181 --remote_name gwi')
+    dev1_gF2 = net.addDocker('dev1_gF2', ip='10.0.0.21/24', dimage='dev1_gf2-image', dcmd='node device.js --local_ip 0.0.0.0 --local_port 9001 --local_name device_gf2_device1 --remote_ip 127.0.0.1 --remote_port 8282 --remote_name gwf1 --send_period 3000')
+    dev2_gF2 = net.addDocker('dev2_gF2', ip='10.0.0.22/24', dimage='dev2_gf2-image', dcmd='node device.js --local_ip 0.0.0.0 --local_port 9001 --local_name device_gf2_device2 --remote_ip 127.0.0.1 --remote_port 8282 --remote_name gwf1 --send_period 3000')
+    dev3_gF2 = net.addDocker('dev3_gF2', ip='10.0.0.23/24', dimage='dev3_gf2-image', dcmd='node device.js --local_ip 0.0.0.0 --local_port 9001 --local_name device_gf2_device3 --remote_ip 127.0.0.1 --remote_port 8282 --remote_name gwf1 --send_period 3000')
 
-    gatewayFinal3 = net.addDocker('gF3', ip='10.0.0.30/24', dimage='gateway_finale3-image')
-    dev1_gF3 = net.addDocker('dev1_gF3', ip='10.0.0.31/24', dimage='dev1_gf3-image')
-    dev2_gF3 = net.addDocker('dev2_gF3', ip='10.0.0.32/24', dimage='dev2_gf3-image')
-    dev3_gF3 = net.addDocker('dev3_gF3', ip='10.0.0.33/24', dimage='dev3_gf3-image')
+    gatewayFinal3 = net.addDocker('gF3', ip='10.0.0.30/24', dimage='gateway_finale3-image', dcmd='node gateway.js --local_ip 0.0.0.0 --local_port 8282 --local_name gateway_final1 --remote_ip 127.0.0.1 --remote_port 8181 --remote_name gwi')
+    dev1_gF3 = net.addDocker('dev1_gF3', ip='10.0.0.31/24', dimage='dev1_gf3-image', dcmd='node device.js --local_ip 0.0.0.0 --local_port 9001 --local_name device_gf3_device1 --remote_ip 127.0.0.1 --remote_port 8282 --remote_name gwf1 --send_period 3000')
+    dev2_gF3 = net.addDocker('dev2_gF3', ip='10.0.0.32/24', dimage='dev2_gf3-image', dcmd='node device.js --local_ip 0.0.0.0 --local_port 9001 --local_name device_gf3_device2 --remote_ip 127.0.0.1 --remote_port 8282 --remote_name gwf1 --send_period 3000')
+    dev3_gF3 = net.addDocker('dev3_gF3', ip='10.0.0.33/24', dimage='dev3_gf3-image', dcmd='node device.js --local_ip 0.0.0.0 --local_port 9001 --local_name device_gf3_device3 --remote_ip 127.0.0.1 --remote_port 8282 --remote_name gwf1 --send_period 3000')
 
     # Création des liens
     net.addLink(app1, server)
