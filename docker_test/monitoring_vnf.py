@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 local_ip = "0.0.0.0"
 local_port = 8181  # même port que le gwi pour éviter de modifier depuis SDN
-gwi_ip = "10.0.0.1"
+ip_gwi = "10.0.0.1"
 
 packet_count = {
     "10.0.0.10": 0,
@@ -19,6 +19,22 @@ bitrate = {
     "10.0.0.20": 0,
     "10.0.0.30": 0
 }
+addr = {
+    "10.0.0.10": "10.0.0.251",
+    "10.0.0.20": "10.0.0.252",
+    "10.0.0.30": "10.0.0.253"
+}
+port = {
+    "10.0.0.10": 2001,
+    "10.0.0.20": 2002,
+    "10.0.0.30": 2003
+}
+
+E_OK              = 200
+E_CREATED         = 201
+E_FORBIDDEN       = 403
+E_NOT_FOUND       = 404
+E_ALREADY_EXIST   = 500
 
 packet_count_lock = Lock()
 bitrate_lock = Lock()
@@ -33,83 +49,90 @@ def increment_packet_count(addr):
 
 @app.route('/gateways/register', methods=['POST'])
 def gateways_register():
+
     try:
         increment_packet_count(request.remote_addr)
-        resp = requests.post(f"http://{gwi_ip}:{local_port}/gateways/register", json=request)
-        print(f"request: {request}")
-        print(f"resp: {resp.json()}")
-        return resp.json()
+        ##### Voir comment recup ip source
+        #resp = requests.post(f"http://{addr[request.remote_addr]}:{local_port}/gateways/register", json=request)
+        resp = requests.post(f"http://{ip_gwi}:{local_port}/gateways/register", json=request.json)
+        #resp = requests.post(f"http://{ip_gwi}:{port[request.remote_addr]}/gateways/register", json=request.json)
+        print(f"request: {request.json}")
+        return "", E_CREATED
     except requests.RequestException as e:
         print(f"[ERROR] Failed to process /gateways/register: {e}")
-        return "", 500
+        return "", E_ALREADY_EXIST
 
 @app.route('/devices/register', methods=['POST'])
 def devices_register():
     try:
         increment_packet_count(request.remote_addr)
-        resp = requests.post(f"http://{gwi_ip}:{local_port}/devices/register", json=request)
-        print(f"request: {request}")
-        print(f"resp: {resp.json()}")
-        return resp.json()
+        #resp = requests.post(f"http://{addr[request.remote_addr]}:{local_port}/devices/register", json=request)
+        resp = requests.post(f"http://{ip_gwi}:{local_port}/devices/register", json=request.json)
+        #resp = requests.post(f"http://{ip_gwi}:{port[request.remote_addr]}/devices/register", json=request.json)
+        print(f"request: {request.json}")
+        return "", E_OK
     except requests.RequestException as e:
         print(f"[ERROR] Failed to process /devices/register: {e}")
-        return "", 500
 
 @app.route('/device/<dev>/data', methods=['POST'])
 def device_data(dev):
     try:
         increment_packet_count(request.remote_addr)
-        resp = requests.post(f"http://{gwi_ip}:{local_port}/device/{dev}/data", json=request)
-        print(f"request: {request}")
-        print(f"resp: {resp.json()}")
-        return resp.json()
+        #resp = requests.post(f"http://{addr[request.remote_addr]}:{local_port}/device/{dev}/data", json=request)
+        resp = requests.post(f"http://{ip_gwi}:{local_port}/device/{dev}/data", json=request.json)
+        #resp = requests.post(f"http://{ip_gwi}:{port[request.remote_addr]}/device/{dev}/data", json=request.json)
+        print(f"request: {request.json}")
+        return "", E_OK
     except requests.RequestException as e:
         print(f"[ERROR] Failed to process /device/{dev}/data: {e}")
-        return "", 500
 
 @app.route('/gateways', methods=['GET'])
 def get_gateways():
     try:
         increment_packet_count(request.remote_addr)
-        resp = requests.get(f"http://{gwi_ip}:{local_port}/gateways")
+        #resp = requests.get(f"http://{addr[request.remote_addr]}:{local_port}/gateways")
+        resp = requests.get(f"http://{ip_gwi}:{local_port}/gateways")
+        #resp = requests.get(f"http://{ip_gwi}:{port[request.remote_addr]}/gateways")
         print(f"resp: {resp.json()}")
         return resp.json()
     except requests.RequestException as e:
         print(f"[ERROR] Failed to process /gateways: {e}")
-        return "", 500
 
 @app.route('/gateway/<gw>', methods=['GET'])
 def get_gateway(gw):
     try:
         increment_packet_count(request.remote_addr)
-        resp = requests.get(f"http://{gwi_ip}:{local_port}/gateway/{gw}")
+        #resp = requests.get(f"http://{addr[request.remote_addr]}:{local_port}/gateway/{gw}")
+        resp = requests.get(f"http://{ip_gwi}:{local_port}/gateway/{gw}")
+        #resp = requests.get(f"http://{ip_gwi}:{port[request.remote_addr]}/gateway/{gw}")
         print(f"resp: {resp.json()}")
-        return resp.json()
+        return resp.json(), E_OK
     except requests.RequestException as e:
         print(f"[ERROR] Failed to process /gateway/{gw}: {e}")
-        return "", 500
+        return "", E_NOT_FOUND
 
 @app.route('/ping', methods=['GET'])
 def ping():
     try:
         increment_packet_count(request.remote_addr)
-        resp = requests.get(f"http://{gwi_ip}:{local_port}/ping")
-        print(f"resp: {resp.json()}")
-        return resp.json()
+        #resp = requests.get(f"http://{addr[request.remote_addr]}:{local_port}/ping")
+        resp = requests.get(f"http://{ip_gwi}:{local_port}/ping")
+        #resp = requests.get(f"http://{ip_gwi}:{port[request.remote_addr]}/ping")
+        return "", E_OK
     except requests.RequestException as e:
         print(f"[ERROR] Failed to process /ping: {e}")
-        return "", 500
 
 @app.route('/health', methods=['GET'])
 def health():
     try:
         increment_packet_count(request.remote_addr)
-        resp = requests.get(f"http://{gwi_ip}:{local_port}/health")
+        #resp = requests.get(f"http://{addr[request.remote_addr]}:{local_port}/health")
+        resp = requests.get(f"http://{ip_gwi}:{local_port}/health")
+        #resp = requests.get(f"http://{ip_gwi}:{port[request.remote_addr]}/health")
         print(f"resp: {resp.json()}")
-        return resp.json()
+        return "", E_OK
     except requests.RequestException as e:
         print(f"[ERROR] Failed to process /health: {e}")
-        return "", 500
 
 def calculate_bitrate():
     global bitrate, packet_count, start_time
@@ -137,7 +160,7 @@ def main():
     try:
         while True:
             calculate_bitrate()
-            time.sleep(1)
+            time.sleep(5)
     except KeyboardInterrupt:
         print("[INFO] Stopping the application.")
     except Exception as e:
@@ -151,3 +174,6 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         print(f"[CRITICAL] Critical error in main application: {e}")
+
+
+# CHanger addr ip par celle mise dans le launch + ne pas attendre reponse car il y en aura surement pas vu que le paquet est modifié

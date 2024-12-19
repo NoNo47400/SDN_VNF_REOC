@@ -38,6 +38,7 @@ services = {
     'dev2_gf3': ('device.Dockerfile'),
     'dev3_gf3': ('device.Dockerfile'),
     'vnf_monitoring': ('vnf_monitoring.Dockerfile'),
+    'gateway_intermediaire_vnf': ('gateway_intermediate_vnf.Dockerfile'),
 }
 
 # Base directory for Dockerfiles

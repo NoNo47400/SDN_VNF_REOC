@@ -4,7 +4,7 @@ FROM python:3.9-alpine
 # Set the working directory
 WORKDIR /usr/src/app
 
-RUN apk add --no-cache bash
+RUN apk add --no-cache bash curl tcpdump
 
 RUN pip install --upgrade pip
 
