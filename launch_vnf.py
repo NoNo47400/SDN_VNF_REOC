@@ -7,7 +7,7 @@ def create_vnf_monitoring():
     headers = {'Content-Type': 'application/json'}
     data = {
         "image": "vnf_monitoring-image",
-        "network": "(id=input,ip=10.0.0.200/24)"
+        "network": "(id=monitoring,ip=10.0.0.200/24)"
     }
     response = requests.put(url, headers=headers, data=json.dumps(data))
     if response.status_code == 200:
@@ -47,7 +47,7 @@ def redirect_frames_gf_to_vnf(mac_address):
         print(f"Erreur lors de la déviation des trames : {response.status_code}")
 
 
-def modify_request_vnf_to_gi(tos, ip, mac):
+def add_request_vnf_to_gi(tos, ip, mac):
     """Ajoute une règle sur S2 pour rediriger les trames les trames de réponse du VNF originaire du port eth4 vers les gf sur le port eth3."""
     url = "http://localhost:8080/stats/flowentry/add"
     headers = {'Content-Type': 'application/json'}
@@ -93,9 +93,9 @@ def main():
     if mac_address:
         redirect_frames_gf_to_vnf(mac_address)
         # Envoyé vers une adresse random pour savoir d'où vient de base le paquet
-        modify_request_vnf_to_gi(1, "10.0.0.10", "00:00:00:00:10:00")
-        modify_request_vnf_to_gi(2, "10.0.0.20", "00:00:00:00:20:00")
-        modify_request_vnf_to_gi(4, "10.0.0.30", "00:00:00:00:30:00")
+        add_request_vnf_to_gi(1, "10.0.0.10", "00:00:00:00:10:00")
+        add_request_vnf_to_gi(2, "10.0.0.20", "00:00:00:00:20:00")
+        add_request_vnf_to_gi(4, "10.0.0.30", "00:00:00:00:30:00")
         get_sdn_flows()
 
 if __name__ == "__main__":

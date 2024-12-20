@@ -103,6 +103,8 @@ def create_topology():
     net.addLink(switch_gf3_dev, dev2_gF3)
     net.addLink(switch_gf3_dev, dev3_gF3)
 
+    #net.addLink(switch_gf, switch_srv) à rajouter si redirection du traffic via les switchs dà coté
+
     # Modification des adresses IP si besoin
     #gatewayFinal1.cmd('ifconfig dev1-eth0 10.0.0.1/24 up')
 
