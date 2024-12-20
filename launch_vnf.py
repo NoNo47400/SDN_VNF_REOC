@@ -46,50 +46,24 @@ def redirect_frames_gf_to_vnf(mac_address):
     else:
         print(f"Erreur lors de la déviation des trames : {response.status_code}")
 
-def modify_response_frames_vnf_to_gf(ip):
+
+def modify_request_vnf_to_gi(tos, ip, mac):
     """Ajoute une règle sur S2 pour rediriger les trames les trames de réponse du VNF originaire du port eth4 vers les gf sur le port eth3."""
     url = "http://localhost:8080/stats/flowentry/add"
     headers = {'Content-Type': 'application/json'}
     data = {
         "dpid": 3,
-        "priority": 11111,
+        "priority": 1111,
         "match": {
             "in_port": 3,
                 "nw_src": "10.0.0.200", 
-                "nw_dst": ip, 
-                "dl_type": 2048
-            },
-        "actions": [
-            {"type": "SET_FIELD", "field": "ipv4_src", "value": "10.0.0.1"},
-            {"type": "SET_FIELD", "field": "eth_src", "value": "00:00:00:00:00:01"},
-            {"type": "OUTPUT", "port": 4}
-        ]
-    }
-    response = requests.post(url, headers=headers, data=json.dumps(data))
-    if response.status_code == 200:
-        print("Modification des trames de réponse ajoutée avec succès.")
-    else:
-        print(f"Erreur lors de la modification des trames : {response.status_code}")
-
-
-def modify_request_vnf_to_gi(ip, mac):
-    """Ajoute une règle sur S2 pour rediriger les trames les trames de réponse du VNF originaire du port eth4 vers les gf sur le port eth3."""
-    url = "http://localhost:8080/stats/flowentry/add"
-    headers = {'Content-Type': 'application/json'}
-    data = {
-        "dpid": 3,
-        "priority": 11111,
-        "match": {
-            "in_port": 3,
-                "nw_src": "10.0.0.200", 
-                "nw_dst": ip, 
-                "dl_type": 2048
+                "nw_dst": "10.0.0.1",
+                "ip_dscp": tos, # tos = dscp<<2
+                "dl_type": 2048                
             },
         "actions": [
             {"type": "SET_FIELD", "field": "ipv4_src", "value": ip},
             {"type": "SET_FIELD", "field": "eth_src", "value": mac},
-            {"type": "SET_FIELD", "field": "ipv4_dst", "value": "10.0.0.1"},
-            {"type": "SET_FIELD", "field": "eth_dst", "value": "00:00:00:00:00:01"},
             {"type": "OUTPUT", "port": 2}
         ]
     }
@@ -98,36 +72,6 @@ def modify_request_vnf_to_gi(ip, mac):
         print("Modification des trames de réponse ajoutée avec succès.")
     else:
         print(f"Erreur lors de la modification des trames : {response.status_code}")
-
-
-
-# def modify_request_vnf_to_gi(ip_dst, nw_ip_src, nw_mac_src, port):
-#     """Ajoute une règle sur S2 pour rediriger les trames les trames de réponse du VNF originaire du port eth4 vers les gf sur le port eth3."""
-#     url = "http://localhost:8080/stats/flowentry/add"
-#     headers = {'Content-Type': 'application/json'}
-#     data = {
-#         "dpid": 3,
-#         "priority": 11111,
-#         "match": {
-#             "in_port": 3,
-#                 #"nw_dst": ip_dst,  
-#                 "tcp_dst": port,
-#                 "ip_proto": 6,
-#                 "dl_type": 2048
-#             },
-#         "actions": [
-#             {"type": "SET_FIELD", "field": "ipv4_src", "value": nw_ip_src},
-#             {"type": "SET_FIELD", "field": "eth_src", "value": nw_mac_src},
-#             {"type": "SET_FIELD", "field": "ipv4_dst", "value": "10.0.0.1"},
-#             {"type": "SET_FIELD", "field": "eth_dst", "value": "00:00:00:00:00:01"},
-#             {"type": "OUTPUT", "port": 2}
-#         ]
-#     }
-#     response = requests.post(url, headers=headers, data=json.dumps(data))
-#     if response.status_code == 200:
-#         print("Modification des trames de réponse ajoutée avec succès.")
-#     else:
-#         print(f"Erreur lors de la modification des trames : {response.status_code}")
 
 def get_sdn_flows():
     """Récupère et affiche les règles SDN associées au DPID 3."""
@@ -148,14 +92,10 @@ def main():
     mac_address = create_vnf_monitoring()
     if mac_address:
         redirect_frames_gf_to_vnf(mac_address)
-        # Elles sont necessaires
-        modify_response_frames_vnf_to_gf("10.0.0.10")
-        modify_response_frames_vnf_to_gf("10.0.0.20")
-        modify_response_frames_vnf_to_gf("10.0.0.30")
         # Envoyé vers une adresse random pour savoir d'où vient de base le paquet
-        # modify_request_vnf_to_gi("10.0.0.10", "00:00:00:00:10:00")
-        # modify_request_vnf_to_gi("10.0.0.20", "00:00:00:00:20:00")
-        # modify_request_vnf_to_gi("10.0.0.30", "00:00:00:00:30:00")
+        modify_request_vnf_to_gi(1, "10.0.0.10", "00:00:00:00:10:00")
+        modify_request_vnf_to_gi(2, "10.0.0.20", "00:00:00:00:20:00")
+        modify_request_vnf_to_gi(4, "10.0.0.30", "00:00:00:00:30:00")
         get_sdn_flows()
 
 if __name__ == "__main__":

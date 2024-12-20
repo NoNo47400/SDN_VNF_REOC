@@ -84,3 +84,6 @@ docker logs <container_name>
 
 - Ensure that the necessary dependencies are installed in the Dockerfiles using `npm install` commands.
 - Modify environment variables as needed for different configurations.
+
+
+net

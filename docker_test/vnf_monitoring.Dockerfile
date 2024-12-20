@@ -9,7 +9,7 @@ RUN apk add --no-cache bash curl tcpdump
 RUN pip install --upgrade pip
 
 # Install Flask and Requests directly using pip
-RUN pip install --no-cache-dir flask requests 
+RUN pip install --no-cache-dir flask requests iputils
 
 # Copy the Flask script into the container
 COPY monitoring_vnf.py .

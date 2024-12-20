@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 import time
 import requests
+from requests.adapters import HTTPAdapter
 from threading import Lock
 
 app = Flask(__name__)
@@ -14,92 +15,96 @@ packet_count = {
     "10.0.0.20": 0,
     "10.0.0.30": 0
 }
-bitrate = {
-    "10.0.0.10": 0,
-    "10.0.0.20": 0,
-    "10.0.0.30": 0
-}
-addr = {
-    "10.0.0.10": "10.0.0.251",
-    "10.0.0.20": "10.0.0.252",
-    "10.0.0.30": "10.0.0.253"
-}
-port = {
-    "10.0.0.10": 2001,
-    "10.0.0.20": 2002,
-    "10.0.0.30": 2003
-}
 
-E_OK              = 200
-E_CREATED         = 201
-E_FORBIDDEN       = 403
-E_NOT_FOUND       = 404
-E_ALREADY_EXIST   = 500
+bitrate = {}
+
+# Mapping des TOS par IP
+tos_mapping = {
+    "10.0.0.10": 4,
+    "10.0.0.20": 8,
+    "10.0.0.30": 16
+}
 
 packet_count_lock = Lock()
 bitrate_lock = Lock()
 
 start_time = time.time()
 
-def increment_packet_count(addr):
-    global packet_count
-    with packet_count_lock:
-        if addr in packet_count:
-            packet_count[addr] += 1
+class TOSAdapter(HTTPAdapter):
+    """Adapter pour envoyer des requêtes avec un TOS spécifique."""
+    def __init__(self, tos_value, *args, **kwargs):
+        self.tos_value = tos_value
+        super().__init__(*args, **kwargs)
+
+    def init_poolmanager(self, *args, **kwargs):
+        class TOSConnectionPool(requests.packages.urllib3.poolmanager.PoolManager):
+            def _new_conn(self):
+                conn = super()._new_conn()
+                conn.sock.setsockopt(socket.IPPROTO_IP, socket.IP_TOS, self.tos_value)
+                return conn
+        self.poolmanager = TOSConnectionPool(*args, **kwargs)
+
+
+def send_with_tos(req_type, url, json_data, client_ip):
+    """Envoie une requête avec un TOS spécifique."""
+    tos = tos_mapping.get(client_ip, 0)  # Par défaut 0
+    session = requests.Session()
+    adapter = TOSAdapter(tos_value=tos)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    try:
+        if req_type == "POST":
+            session.post(url, json=json_data, timeout=1)  # Timeout court pour ne pas attendre de réponse.
+        elif req_type == "GET":
+            session.get(url, timeout=1)  # Timeout court pour ne pas attendre de réponse.
+    except Exception as e:
+        print(f"[ERROR] Requête échouée pour {client_ip} avec TOS {tos}: {e}")
+
 
 @app.route('/gateways/register', methods=['POST'])
 def gateways_register():
-
-    try:
-        increment_packet_count(request.remote_addr)
-        ##### Voir comment recup ip source
-        #resp = requests.post(f"http://{addr[request.remote_addr]}:{local_port}/gateways/register", json=request)
-        resp = requests.post(f"http://{ip_gwi}:{local_port}/gateways/register", json=request.json)
-        #resp = requests.post(f"http://{ip_gwi}:{port[request.remote_addr]}/gateways/register", json=request.json)
-        print(f"request: {request.json}")
-        return "", E_CREATED
-    except requests.RequestException as e:
-        print(f"[ERROR] Failed to process /gateways/register: {e}")
-        return "", E_ALREADY_EXIST
+    client_ip = request.remote_addr
+    increment_packet_count(client_ip)
+    url = f"http://{ip_gwi}:{local_port}/gateways/register"
+    send_with_tos("POST", url, request.json, client_ip)
+    print(f"[INFO] Requête envoyée pour {client_ip} avec data {request.json}")
+    return "", 201
 
 @app.route('/devices/register', methods=['POST'])
 def devices_register():
-    try:
-        increment_packet_count(request.remote_addr)
-        #resp = requests.post(f"http://{addr[request.remote_addr]}:{local_port}/devices/register", json=request)
-        resp = requests.post(f"http://{ip_gwi}:{local_port}/devices/register", json=request.json)
-        #resp = requests.post(f"http://{ip_gwi}:{port[request.remote_addr]}/devices/register", json=request.json)
-        print(f"request: {request.json}")
-        return "", E_OK
-    except requests.RequestException as e:
-        print(f"[ERROR] Failed to process /devices/register: {e}")
+    client_ip = request.remote_addr
+    increment_packet_count(client_ip)
+    url = f"http://{ip_gwi}:{local_port}/devices/register"
+    send_with_tos("POST", url, request.json, client_ip)
+    print(f"[INFO] Requête envoyée pour {client_ip} avec data {request.json}")
+    return "", 201
 
 @app.route('/device/<dev>/data', methods=['POST'])
 def device_data(dev):
-    try:
-        increment_packet_count(request.remote_addr)
-        #resp = requests.post(f"http://{addr[request.remote_addr]}:{local_port}/device/{dev}/data", json=request)
-        resp = requests.post(f"http://{ip_gwi}:{local_port}/device/{dev}/data", json=request.json)
-        #resp = requests.post(f"http://{ip_gwi}:{port[request.remote_addr]}/device/{dev}/data", json=request.json)
-        print(f"request: {request.json}")
-        return "", E_OK
-    except requests.RequestException as e:
-        print(f"[ERROR] Failed to process /device/{dev}/data: {e}")
+    client_ip = request.remote_addr
+    increment_packet_count(client_ip)
+    url = f"http://{ip_gwi}:{local_port}/device/{dev}/data"
+    send_with_tos("POST", url, request.json, client_ip)
+    print(f"[INFO] Requête envoyée pour {client_ip} avec data {request.json}")
+    return "", 201
 
 @app.route('/gateways', methods=['GET'])
 def get_gateways():
-    try:
-        increment_packet_count(request.remote_addr)
-        #resp = requests.get(f"http://{addr[request.remote_addr]}:{local_port}/gateways")
-        resp = requests.get(f"http://{ip_gwi}:{local_port}/gateways")
-        #resp = requests.get(f"http://{ip_gwi}:{port[request.remote_addr]}/gateways")
-        print(f"resp: {resp.json()}")
-        return resp.json()
-    except requests.RequestException as e:
-        print(f"[ERROR] Failed to process /gateways: {e}")
+    client_ip = request.remote_addr
+    increment_packet_count(client_ip)
+    url = f"http://{ip_gwi}:{local_port}/gateways"
+    send_with_tos("GET", url, request.json, client_ip)
+    print(f"[INFO] Requête envoyée pour {client_ip} avec data {request.json}")
+    return "", 201
 
 @app.route('/gateway/<gw>', methods=['GET'])
 def get_gateway(gw):
+    client_ip = request.remote_addr
+    increment_packet_count(client_ip)
+    url = f"http://{ip_gwi}:{local_port}/gateway/{gw}"
+    send_with_tos("GET", url, request.json, client_ip)
+    print(f"[INFO] Requête envoyée pour {client_ip} avec data {request.json}")
+    return "", 201
     try:
         increment_packet_count(request.remote_addr)
         #resp = requests.get(f"http://{addr[request.remote_addr]}:{local_port}/gateway/{gw}")
@@ -113,26 +118,32 @@ def get_gateway(gw):
 
 @app.route('/ping', methods=['GET'])
 def ping():
-    try:
-        increment_packet_count(request.remote_addr)
-        #resp = requests.get(f"http://{addr[request.remote_addr]}:{local_port}/ping")
-        resp = requests.get(f"http://{ip_gwi}:{local_port}/ping")
-        #resp = requests.get(f"http://{ip_gwi}:{port[request.remote_addr]}/ping")
-        return "", E_OK
-    except requests.RequestException as e:
-        print(f"[ERROR] Failed to process /ping: {e}")
+    client_ip = request.remote_addr
+    increment_packet_count(client_ip)
+    url = f"http://{ip_gwi}:{local_port}/ping"
+    send_with_tos("GET", url, request.json, client_ip)
+    print(f"[INFO] Requête envoyée pour {client_ip} avec data {request.json}")
+    return "", 201
 
 @app.route('/health', methods=['GET'])
 def health():
-    try:
-        increment_packet_count(request.remote_addr)
-        #resp = requests.get(f"http://{addr[request.remote_addr]}:{local_port}/health")
-        resp = requests.get(f"http://{ip_gwi}:{local_port}/health")
-        #resp = requests.get(f"http://{ip_gwi}:{port[request.remote_addr]}/health")
-        print(f"resp: {resp.json()}")
-        return "", E_OK
-    except requests.RequestException as e:
-        print(f"[ERROR] Failed to process /health: {e}")
+    client_ip = request.remote_addr
+    increment_packet_count(client_ip)
+    url = f"http://{ip_gwi}:{local_port}/health"
+    send_with_tos("GET", url, request.json, client_ip)
+    print(f"[INFO] Requête envoyée pour {client_ip} avec data {request.json}")
+    return "", 201
+
+def increment_packet_count(addr):
+    global packet_count
+    with packet_count_lock:
+        if addr not in packet_count:
+            packet_count[addr] = 0  # Initialise l'adresse avec un compteur à 0 si elle n'existe pas
+        packet_count[addr] += 1
+    with bitrate_lock:
+        if addr not in bitrate:
+            bitrate[addr] = 0  # Initialise le débit si nécessaire
+
 
 def calculate_bitrate():
     global bitrate, packet_count, start_time
