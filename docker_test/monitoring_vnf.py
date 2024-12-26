@@ -107,9 +107,7 @@ def get_gateway(gw):
     return "", 201
     try:
         increment_packet_count(request.remote_addr)
-        #resp = requests.get(f"http://{addr[request.remote_addr]}:{local_port}/gateway/{gw}")
         resp = requests.get(f"http://{ip_gwi}:{local_port}/gateway/{gw}")
-        #resp = requests.get(f"http://{ip_gwi}:{port[request.remote_addr]}/gateway/{gw}")
         print(f"resp: {resp.json()}")
         return resp.json(), E_OK
     except requests.RequestException as e:
@@ -121,7 +119,7 @@ def ping():
     client_ip = request.remote_addr
     increment_packet_count(client_ip)
     url = f"http://{ip_gwi}:{local_port}/ping"
-    send_with_tos("GET", url, request.json, client_ip)
+    send_with_tos("GET", url, "", client_ip)
     print(f"[INFO] Requête envoyée pour {client_ip} avec data {request.json}")
     return "", 201
 
@@ -130,7 +128,7 @@ def health():
     client_ip = request.remote_addr
     increment_packet_count(client_ip)
     url = f"http://{ip_gwi}:{local_port}/health"
-    send_with_tos("GET", url, request.json, client_ip)
+    send_with_tos("GET", url, "", client_ip)
     print(f"[INFO] Requête envoyée pour {client_ip} avec data {request.json}")
     return "", 201
 

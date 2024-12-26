@@ -7,7 +7,7 @@ def create_vnf_monitoring():
     headers = {'Content-Type': 'application/json'}
     data = {
         "image": "vnf_monitoring-image",
-        "network": "(id=monitoring,ip=10.0.0.200/24)"
+        "network": "(id=input,ip=10.0.0.200/24)"
     }
     response = requests.put(url, headers=headers, data=json.dumps(data))
     if response.status_code == 200:
@@ -28,7 +28,7 @@ def redirect_frames_gf_to_vnf(mac_address):
     headers = {'Content-Type': 'application/json'}
     data = {
         "dpid": 3,
-        "priority": 11111,
+        "priority": 1111,
         "match": {
             "in_port": 4,
                 "nw_dst": "10.0.0.1", 

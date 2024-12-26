@@ -7,7 +7,7 @@ def create_vnf_gi():
     headers = {'Content-Type': 'application/json'}
     data = {
         "image": "gateway_intermediaire_vnf-image",
-        "network": "(id=gwi,ip=10.0.0.2/24)"
+        "network": "(id=input,ip=10.0.0.2/24)"
     }
     response = requests.put(url, headers=headers, data=json.dumps(data))
     if response.status_code == 200:
@@ -25,13 +25,13 @@ def create_vnf_gi():
 
 def modify_request_vnf_to_new_gi(tos, ip, mac, mac_dst):
     """Ajoute une règle sur S2 pour rediriger les trames les trames de réponse du VNF originaire du port eth4 vers les gf sur le port eth3."""
-    url = "http://localhost:8080/stats/flowentry/modify"
+    url = "http://localhost:8080/stats/flowentry/add"
     headers = {'Content-Type': 'application/json'}
     data = {
-        "dpid": 3,
+        "dpid": 3e9,
         "priority": 1111, 
         "match": {
-            "in_port": 3,
+            "in_port": 2,
                 "nw_src": "10.0.0.200", 
                 "nw_dst": "10.0.0.1",
                 "ip_dscp": tos, # tos = dscp<<2
@@ -89,12 +89,16 @@ def get_sdn_flows():
     else:
         print(f"Erreur lors de la récupération des flux SDN : {response.status_code}")
 
+
+
+
 # Programme principal
 def main():
     mac_address = create_vnf_gi()
     if mac_address:
         modify_request_vnf_to_new_gi(1, "10.0.0.10", "00:00:00:00:10:00", mac_address)
         get_sdn_flows()
+
 
 if __name__ == "__main__":
     main()
