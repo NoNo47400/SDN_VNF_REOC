@@ -2,10 +2,7 @@ from flask import Flask, jsonify, request
 import time
 import requests
 from requests.adapters import HTTPAdapter
-from threading import Lock
-import socket
-from threading import Thread
-
+from threading import Lock, Thread
 
 app = Flask(__name__)
 
@@ -48,19 +45,18 @@ class TOSAdapter(HTTPAdapter):
         self.poolmanager = TOSConnectionPool(*args, **kwargs)
 
 
-#def send_with_tos(req_type, url, json_data, client_ip):
-def send_with_tos(url, json_data, client_ip):
+def send_with_tos(req_type, url, json_data, client_ip):
     """Envoie une requête avec un TOS spécifique."""
     tos = tos_mapping.get(client_ip, 0)  # Par défaut 0
     session = requests.Session()
     adapter = TOSAdapter(tos_value=tos)
     session.mount("http://", adapter)
+    session.mount("https://", adapter)
     try:
-        session.post(url, json=json_data, timeout=1)
-        # if req_type == "POST":
-        #     session.post(url, json=json_data, timeout=1)  # Timeout court pour ne pas attendre de réponse.
-        # elif req_type == "GET":
-        #     session.get(url, timeout=1)  # Timeout court pour ne pas attendre de réponse.
+        if req_type == "POST":
+            session.post(url, json=json_data, timeout=1)  # Timeout court pour ne pas attendre de réponse.
+        elif req_type == "GET":
+            session.get(url, timeout=1)  # Timeout court pour ne pas attendre de réponse.
     except Exception as e:
         print(f"[ERROR] Requête échouée pour {client_ip} avec TOS {tos}: {e}")
 
@@ -70,8 +66,7 @@ def gateways_register():
     client_ip = request.remote_addr
     increment_packet_count(client_ip)
     url = f"http://{ip_gwi}:{local_port}/gateways/register"
-    #send_with_tos("POST", url, request.json, client_ip)
-    send_with_tos(url, request.json, client_ip)
+    send_with_tos("POST", url, request.json, client_ip)
     print(f"[INFO] Requête envoyée pour {client_ip} avec data {request.json}")
     return "", 201
 
@@ -80,8 +75,7 @@ def devices_register():
     client_ip = request.remote_addr
     increment_packet_count(client_ip)
     url = f"http://{ip_gwi}:{local_port}/devices/register"
-    # send_with_tos("POST", url, request.json, client_ip)
-    send_with_tos(url, request.json, client_ip)
+    send_with_tos("POST", url, request.json, client_ip)
     print(f"[INFO] Requête envoyée pour {client_ip} avec data {request.json}")
     return "", 201
 
@@ -90,8 +84,7 @@ def device_data(dev):
     client_ip = request.remote_addr
     increment_packet_count(client_ip)
     url = f"http://{ip_gwi}:{local_port}/device/{dev}/data"
-    # send_with_tos("POST", url, request.json, client_ip)
-    send_with_tos(url, request.json, client_ip)
+    send_with_tos("POST", url, request.json, client_ip)
     print(f"[INFO] Requête envoyée pour {client_ip} avec data {request.json}")
     return "", 201
 
@@ -100,8 +93,7 @@ def get_gateways():
     client_ip = request.remote_addr
     increment_packet_count(client_ip)
     url = f"http://{ip_gwi}:{local_port}/gateways"
-    # send_with_tos("GET", url, None, client_ip)
-    send_with_tos(url, request.json, client_ip)
+    send_with_tos("GET", url, None, client_ip)
     print(f"[INFO] Requête envoyée pour {client_ip}")
     return "", 201
 
@@ -110,8 +102,7 @@ def get_gateway(gw):
     client_ip = request.remote_addr
     increment_packet_count(client_ip)
     url = f"http://{ip_gwi}:{local_port}/gateway/{gw}"
-    # send_with_tos("GET", url, None, client_ip)
-    send_with_tos(url, request.json, client_ip)
+    send_with_tos("GET", url, None, client_ip)
     print(f"[INFO] Requête envoyée pour {client_ip}")
     return "", 201
 
@@ -120,8 +111,7 @@ def ping():
     client_ip = request.remote_addr
     increment_packet_count(client_ip)
     url = f"http://{ip_gwi}:{local_port}/ping"
-    # send_with_tos("GET", url, None, client_ip)
-    send_with_tos(url, request.json, client_ip)
+    send_with_tos("GET", url, None, client_ip)
     print(f"[INFO] Requête envoyée pour {client_ip}")
     return "", 201
 
@@ -130,16 +120,15 @@ def health():
     client_ip = request.remote_addr
     increment_packet_count(client_ip)
     url = f"http://{ip_gwi}:{local_port}/health"
-    # send_with_tos("GET", url, None, client_ip)
-    send_with_tos(url, request.json, client_ip)
+    send_with_tos("GET", url, None, client_ip)
     print(f"[INFO] Requête envoyée pour {client_ip}")
     return "", 201
 
 def increment_packet_count(addr):
-    global packet_count, bitrate
+    global packet_count#, bitrate
     with packet_count_lock:
         if addr not in packet_count:
-            packet_count[addr] = 0  # Initialise le compteur
+            packet_count[addr] = 0  # Initialise l'adresse avec un compteur à 0 si elle n'existe pas
         packet_count[addr] += 1
     with bitrate_lock:
         if addr not in bitrate:
@@ -180,6 +169,7 @@ def main():
 
 if __name__ == "__main__":
     try:
+        print("Version 1.0")
         flask_thread = Thread(target=lambda: app.run(host=local_ip, port=local_port))
         flask_thread.start()
         main()

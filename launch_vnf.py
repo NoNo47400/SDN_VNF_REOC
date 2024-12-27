@@ -7,7 +7,7 @@ def create_vnf_monitoring():
     headers = {'Content-Type': 'application/json'}
     data = {
         "image": "vnf_monitoring-image",
-        "network": "(id=input,ip=10.0.0.200/24)"
+        "network": "(id=monitoring,ip=10.0.0.200/24)"
     }
     response = requests.put(url, headers=headers, data=json.dumps(data))
     if response.status_code == 200:
