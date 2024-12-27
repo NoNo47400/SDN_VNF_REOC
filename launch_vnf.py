@@ -28,7 +28,7 @@ def redirect_frames_gf_to_vnf(mac_address):
     headers = {'Content-Type': 'application/json'}
     data = {
         "dpid": 3,
-        "priority": 1111,
+        "priority": 11111,
         "match": {
             "in_port": 4,
                 "nw_dst": "10.0.0.1", 
@@ -53,7 +53,7 @@ def add_request_vnf_to_gi(tos, ip, mac):
     headers = {'Content-Type': 'application/json'}
     data = {
         "dpid": 3,
-        "priority": 1111,
+        "priority": 11111,
         "match": {
             "in_port": 3,
                 "nw_src": "10.0.0.200", 

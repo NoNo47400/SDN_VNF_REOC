@@ -41,7 +41,7 @@ def create_topology():
     # Ajout des switches SDN
     switch_app = net.addSwitch('s1')
     switch_srv = net.addSwitch('s2')
-    switch_gi = net.addSwitch('s3')  #### REVOIR REGLE SDN CAR PAS LE MEME NUMERO DE SWITCH
+    switch_gi = net.addSwitch('s3')  
     switch_gf = net.addSwitch('s4')
     switch_gf1_dev = net.addSwitch('s5')
     switch_gf2_dev = net.addSwitch('s6')
@@ -56,9 +56,7 @@ def create_topology():
     server = net.addDocker('service', ip='10.0.0.100/24', dimage='server-image', mac='01:00:00:00:00:00', dcmd='node server.js --local_ip "0.0.0.0" --local_port 8080 --local_name "srv"')
 
     gatewayIntermediaire = net.addDocker('gI', ip='10.0.0.1/24', dimage='gateway_intermediaire-image', mac='00:00:00:00:00:01', dcmd='node gateway.js --local_ip "0.0.0.0" --local_port 8181 --local_name "gwi" --remote_ip "10.0.0.100" --remote_port 8080 --remote_name "srv"')
-    
-    # PLUTOT METTRE ADRESSE A CHAQUE LIEN QUE CHAQUE MACHINE
-    # il manque le serveur aussi
+    # peut etre daclarer les gateway final avant dev
     gatewayFinal1 = net.addDocker('gF1', ip='10.0.0.10/24', dimage='gateway_final1-image', mac='00:00:00:00:10:00', dcmd='node gateway.js --local_ip "0.0.0.0" --local_port 8282 --local_name "gwf1" --remote_ip "10.0.0.1" --remote_port 8181 --remote_name "gwi"')
     dev1_gF1 = net.addDocker('dev1_gF1', ip='10.0.0.11/24', dimage='dev1_gf1-image', mac='00:00:00:00:11:00', dcmd='node device.js --local_ip "0.0.0.0" --local_port 9001 --local_name "device1_gf1" --remote_ip "10.0.0.10" --remote_port 8282 --remote_name "gwf1" --send_period 3000')
     dev2_gF1 = net.addDocker('dev2_gF1', ip='10.0.0.12/24', dimage='dev2_gf1-image', mac='00:00:00:00:12:00', dcmd='node device.js --local_ip "0.0.0.0" --local_port 9001 --local_name "device2_gf1" --remote_ip "10.0.0.10" --remote_port 8282 --remote_name "gwf1" --send_period 3000')
@@ -90,7 +88,7 @@ def create_topology():
     net.addLink(switch_gf, switch_gf1_dev)
     net.addLink(switch_gf, switch_gf2_dev)
     net.addLink(switch_gf, switch_gf3_dev)
-    net.addLink(switch_gf1_dev, gatewayFinal1)
+    net.addLink(switch_gf1_dev, gatewayFinal1) # en trop
     net.addLink(switch_gf1_dev, dev1_gF1)
     net.addLink(switch_gf1_dev, dev2_gF1)
     net.addLink(switch_gf1_dev, dev3_gF1)
