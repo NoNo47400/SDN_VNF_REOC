@@ -2,7 +2,8 @@ from flask import Flask, jsonify, request
 import time
 import requests
 from requests.adapters import HTTPAdapter
-from threading import Lock, Thread
+from threading import Lock
+import socket
 
 app = Flask(__name__)
 
@@ -10,11 +11,7 @@ local_ip = "0.0.0.0"
 local_port = 8181  # même port que le gwi pour éviter de modifier depuis SDN
 ip_gwi = "10.0.0.1"
 
-packet_count = {
-    "10.0.0.10": 0,
-    "10.0.0.20": 0,
-    "10.0.0.30": 0
-}
+packet_count = {}
 
 bitrate = {}
 
@@ -48,17 +45,21 @@ class TOSAdapter(HTTPAdapter):
 def send_with_tos(req_type, url, json_data, client_ip):
     """Envoie une requête avec un TOS spécifique."""
     tos = tos_mapping.get(client_ip, 0)  # Par défaut 0
+    print(f'tos trouvé {tos}')
     session = requests.Session()
     adapter = TOSAdapter(tos_value=tos)
     session.mount("http://", adapter)
     session.mount("https://", adapter)
+    print(f'test avnt try de tos')
     try:
         if req_type == "POST":
+            print(f'test dans POST')
             session.post(url, json=json_data, timeout=1)  # Timeout court pour ne pas attendre de réponse.
         elif req_type == "GET":
+            print(f'test dans GET')
             session.get(url, timeout=1)  # Timeout court pour ne pas attendre de réponse.
     except Exception as e:
-        print(f"[ERROR] Requête échouée pour {client_ip} avec TOS {tos}: {e}")
+        print(f"[ERROR] Requête échouée par {client_ip} avec TOS {tos}: {e}")
 
 
 @app.route('/gateways/register', methods=['POST'])
@@ -67,7 +68,7 @@ def gateways_register():
     increment_packet_count(client_ip)
     url = f"http://{ip_gwi}:{local_port}/gateways/register"
     send_with_tos("POST", url, request.json, client_ip)
-    print(f"[INFO] Requête envoyée pour {client_ip} avec data {request.json}")
+    print(f"[INFO] Requête envoyée par {client_ip} avec data {request.json}")
     return "", 201
 
 @app.route('/devices/register', methods=['POST'])
@@ -76,7 +77,7 @@ def devices_register():
     increment_packet_count(client_ip)
     url = f"http://{ip_gwi}:{local_port}/devices/register"
     send_with_tos("POST", url, request.json, client_ip)
-    print(f"[INFO] Requête envoyée pour {client_ip} avec data {request.json}")
+    print(f"[INFO] Requête envoyée par {client_ip} avec data {request.json}")
     return "", 201
 
 @app.route('/device/<dev>/data', methods=['POST'])
@@ -85,16 +86,17 @@ def device_data(dev):
     increment_packet_count(client_ip)
     url = f"http://{ip_gwi}:{local_port}/device/{dev}/data"
     send_with_tos("POST", url, request.json, client_ip)
-    print(f"[INFO] Requête envoyée pour {client_ip} avec data {request.json}")
+    print(f"[INFO] Requête envoyée par {client_ip} avec data {request.json}")
     return "", 201
 
 @app.route('/gateways', methods=['GET'])
 def get_gateways():
     client_ip = request.remote_addr
+    print(f'adresse : {client_ip}')
     increment_packet_count(client_ip)
     url = f"http://{ip_gwi}:{local_port}/gateways"
     send_with_tos("GET", url, None, client_ip)
-    print(f"[INFO] Requête envoyée pour {client_ip}")
+    print(f"[INFO] Requête envoyée par {client_ip}")
     return "", 201
 
 @app.route('/gateway/<gw>', methods=['GET'])
@@ -103,7 +105,7 @@ def get_gateway(gw):
     increment_packet_count(client_ip)
     url = f"http://{ip_gwi}:{local_port}/gateway/{gw}"
     send_with_tos("GET", url, None, client_ip)
-    print(f"[INFO] Requête envoyée pour {client_ip}")
+    print(f"[INFO] Requête envoyée par {client_ip}")
     return "", 201
 
 @app.route('/ping', methods=['GET'])
@@ -112,7 +114,7 @@ def ping():
     increment_packet_count(client_ip)
     url = f"http://{ip_gwi}:{local_port}/ping"
     send_with_tos("GET", url, None, client_ip)
-    print(f"[INFO] Requête envoyée pour {client_ip}")
+    print(f"[INFO] Requête envoyée par {client_ip}")
     return "", 201
 
 @app.route('/health', methods=['GET'])
@@ -121,11 +123,11 @@ def health():
     increment_packet_count(client_ip)
     url = f"http://{ip_gwi}:{local_port}/health"
     send_with_tos("GET", url, None, client_ip)
-    print(f"[INFO] Requête envoyée pour {client_ip}")
+    print(f"[INFO] Requête envoyée par {client_ip}")
     return "", 201
 
 def increment_packet_count(addr):
-    global packet_count#, bitrate
+    global packet_count
     with packet_count_lock:
         if addr not in packet_count:
             packet_count[addr] = 0  # Initialise l'adresse avec un compteur à 0 si elle n'existe pas
@@ -168,8 +170,8 @@ def main():
         print(f"[ERROR] Error in main loop: {e}")
 
 if __name__ == "__main__":
+    from threading import Thread
     try:
-        print("Version 1.0")
         flask_thread = Thread(target=lambda: app.run(host=local_ip, port=local_port))
         flask_thread.start()
         main()
