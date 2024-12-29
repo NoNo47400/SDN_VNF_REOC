@@ -70,6 +70,30 @@ def redirect_frames_vnf_to_gf(ip_addr):
     else:
         print(f"Erreur lors de la déviation des trames : {response.status_code}")
 
+def add_request_vnf_to_gi_tos(tos):
+    """Ajoute une règle sur S2 pour rediriger les trames les trames de réponse du VNF originaire du port eth4 vers les gf sur le port eth3."""
+    url = "http://localhost:8080/stats/flowentry/add"
+    headers = {'Content-Type': 'application/json'}
+    data = {
+        "dpid": 3,
+        "priority": 1111,
+        "match": {
+            "in_port": 3,
+                "nw_src": "10.0.0.200", 
+                "nw_dst": "10.0.0.1",
+                "ip_dscp": tos, # tos = dscp<<2
+                "dl_type": 2048                
+            },
+        "actions": [
+            {"type": "SET_FIELD", "field": "ip_dscp", "value": 0},
+            {"type": "OUTPUT", "port": 2}
+        ]
+    }
+    response = requests.post(url, headers=headers, data=json.dumps(data))
+    if response.status_code == 200:
+        print("Modification des trames de réponse ajoutée avec succès.")
+    else:
+        print(f"Erreur lors de la modification des trames : {response.status_code}")
 
 def add_request_vnf_to_gi(tos, ip, mac):
     """Ajoute une règle sur S2 pour rediriger les trames les trames de réponse du VNF originaire du port eth4 vers les gf sur le port eth3."""
@@ -88,7 +112,33 @@ def add_request_vnf_to_gi(tos, ip, mac):
         "actions": [
             {"type": "SET_FIELD", "field": "ipv4_src", "value": ip},
             {"type": "SET_FIELD", "field": "eth_src", "value": mac},
+            {"type": "SET_FIELD", "field": "ip_dscp", "value": 0},
             {"type": "OUTPUT", "port": 2}
+        ]
+    }
+    response = requests.post(url, headers=headers, data=json.dumps(data))
+    if response.status_code == 200:
+        print("Modification des trames de réponse ajoutée avec succès.")
+    else:
+        print(f"Erreur lors de la modification des trames : {response.status_code}")
+
+def add_request_gi_to_vnf(ip, mac):
+    """Ajoute une règle sur S2 pour rediriger les trames les trames de réponse du VNF originaire du port eth4 vers les gf sur le port eth3."""
+    url = "http://localhost:8080/stats/flowentry/add"
+    headers = {'Content-Type': 'application/json'}
+    data = {
+        "dpid": 3,
+        "priority": 1111,
+        "match": {
+            "in_port": 2,
+                "nw_src": "10.0.0.1", 
+                "nw_dst": ip,
+                "dl_type": 2048                
+            },
+        "actions": [
+            {"type": "SET_FIELD", "field": "ipv4_dst", "value": "10.0.0.200"},
+            {"type": "SET_FIELD", "field": "eth_dst", "value": mac},
+            {"type": "OUTPUT", "port": 3}
         ]
     }
     response = requests.post(url, headers=headers, data=json.dumps(data))
@@ -120,9 +170,15 @@ def main():
         redirect_frames_vnf_to_gf("10.0.0.20")
         redirect_frames_vnf_to_gf("10.0.0.30")
         # Envoyé vers une adresse random pour savoir d'où vient de base le paquet
-        add_request_vnf_to_gi(1, "10.0.0.10", "00:00:00:00:10:00")
-        add_request_vnf_to_gi(2, "10.0.0.20", "00:00:00:00:20:00")
-        add_request_vnf_to_gi(4, "10.0.0.30", "00:00:00:00:30:00")
+        add_request_vnf_to_gi_tos(1)
+        add_request_vnf_to_gi_tos(2)
+        add_request_vnf_to_gi_tos(4)
+        # add_request_vnf_to_gi(1, "10.0.0.10", "00:00:00:00:10:00")
+        # add_request_vnf_to_gi(2, "10.0.0.20", "00:00:00:00:20:00")
+        # add_request_vnf_to_gi(4, "10.0.0.30", "00:00:00:00:30:00")
+        # add_request_gi_to_vnf("10.0.0.10", mac_address)
+        # add_request_gi_to_vnf("10.0.0.20", mac_address)
+        # add_request_gi_to_vnf("10.0.0.30", mac_address)
         get_sdn_flows()
 
 if __name__ == "__main__":

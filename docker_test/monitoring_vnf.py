@@ -4,6 +4,8 @@ import requests
 from requests.adapters import HTTPAdapter
 from threading import Lock
 import socket
+import http.client
+import json
 
 app = Flask(__name__)
 
@@ -27,6 +29,7 @@ bitrate_lock = Lock()
 
 start_time = time.time()
 
+# change pas vraiment le tos j'ai l'impression
 class TOSAdapter(HTTPAdapter):
     """Adapter pour envoyer des requêtes avec un TOS spécifique."""
     def __init__(self, tos_value, *args, **kwargs):
@@ -40,7 +43,6 @@ class TOSAdapter(HTTPAdapter):
                 conn.sock.setsockopt(socket.IPPROTO_IP, socket.IP_TOS, self.tos_value)
                 return conn
         self.poolmanager = TOSConnectionPool(*args, **kwargs)
-
 
 def send_with_tos(req_type, url, json_data, client_ip):
     """Envoie une requête avec un TOS spécifique."""
@@ -61,33 +63,79 @@ def send_with_tos(req_type, url, json_data, client_ip):
     except Exception as e:
         print(f"[ERROR] Requête échouée par {client_ip} avec TOS {tos}: {e}")
 
+# class TOSAdapter(http.client.HTTPConnection):
+#     """Adapter to send HTTP requests with a specific TOS."""
+#     def __init__(self, host, port, tos, timeout=None):
+#         super().__init__(host, port, timeout=timeout)
+#         self.tos = tos
+
+#     def connect(self):
+#         """Set up socket with TOS before making HTTP request."""
+#         self.sock = socket.create_connection((self.host, self.port), self.timeout)
+#         self.sock.setsockopt(socket.IPPROTO_IP, socket.IP_TOS, self.tos)
+
+# def send_with_tos(method, url, payload, client_ip):
+#     # Extract target IP, port and path
+#     target_ip = url.split("://")[1].split(":")[0]
+#     port = int(url.split(":")[2].split("/")[0]) if ":" in url else 80
+#     path = url.split("/", 1)[1]
+#     tos = tos_mapping.get(client_ip, 0)  # Default TOS to 0 if not in mapping
+
+#     # Create HTTP connection with TOS
+#     conn = TOSAdapter(target_ip, port, tos)
+
+    # try:
+    #     if method.upper() == "GET":
+    #         conn.request("GET", "/" + path)
+    #     elif method.upper() == "POST":
+    #         if payload:
+    #             json_payload = json.dumps(payload)
+    #             headers = {'Content-Type': 'application/json'}
+    #             conn.request("POST", "/" + path, body=json_payload, headers=headers)
+    #         else:
+    #             conn.request("POST", "/" + path)
+        
+    #     response = conn.getresponse()
+    #     data = response.read()  # Read the response
+    #     conn.close()  # Always close the connection
+    #     return data  # Return response data
+
+    # except Exception as e:
+    #     print(f"[ERROR] Request failed for {client_ip}: {e}")
+    #     return None  # Return None if error occurs
 
 @app.route('/gateways/register', methods=['POST'])
 def gateways_register():
     client_ip = request.remote_addr
     increment_packet_count(client_ip)
     url = f"http://{ip_gwi}:{local_port}/gateways/register"
-    send_with_tos("POST", url, request.json, client_ip)
-    print(f"[INFO] Requête envoyée par {client_ip} avec data {request.json}")
-    return "", 201
+    response_data = send_with_tos("POST", url, request.json, client_ip)
+    if response_data:
+        return response_data, 201
+    else:
+        return jsonify({"error": "Request failed"}), 500
 
 @app.route('/devices/register', methods=['POST'])
 def devices_register():
     client_ip = request.remote_addr
     increment_packet_count(client_ip)
     url = f"http://{ip_gwi}:{local_port}/devices/register"
-    send_with_tos("POST", url, request.json, client_ip)
-    print(f"[INFO] Requête envoyée par {client_ip} avec data {request.json}")
-    return "", 201
+    response_data = send_with_tos("POST", url, request.json, client_ip)
+    if response_data:
+        return response_data, 201
+    else:
+        return jsonify({"error": "Request failed"}), 500
 
 @app.route('/device/<dev>/data', methods=['POST'])
 def device_data(dev):
     client_ip = request.remote_addr
     increment_packet_count(client_ip)
     url = f"http://{ip_gwi}:{local_port}/device/{dev}/data"
-    send_with_tos("POST", url, request.json, client_ip)
-    print(f"[INFO] Requête envoyée par {client_ip} avec data {request.json}")
-    return "", 201
+    response_data = send_with_tos("POST", url, request.json, client_ip)
+    if response_data:
+        return response_data, 201
+    else:
+        return jsonify({"error": "Request failed"}), 500
 
 @app.route('/gateways', methods=['GET'])
 def get_gateways():
@@ -95,36 +143,44 @@ def get_gateways():
     print(f'adresse : {client_ip}')
     increment_packet_count(client_ip)
     url = f"http://{ip_gwi}:{local_port}/gateways"
-    send_with_tos("GET", url, None, client_ip)
-    print(f"[INFO] Requête envoyée par {client_ip}")
-    return "", 201
+    response_data = send_with_tos("GET", url, None, client_ip)
+    if response_data:
+        return response_data, 201
+    else:
+        return jsonify({"error": "Request failed"}), 500
 
 @app.route('/gateway/<gw>', methods=['GET'])
 def get_gateway(gw):
     client_ip = request.remote_addr
     increment_packet_count(client_ip)
     url = f"http://{ip_gwi}:{local_port}/gateway/{gw}"
-    send_with_tos("GET", url, None, client_ip)
-    print(f"[INFO] Requête envoyée par {client_ip}")
-    return "", 201
+    response_data = send_with_tos("GET", url, None, client_ip)
+    if response_data:
+        return response_data, 201
+    else:
+        return jsonify({"error": "Request failed"}), 500
 
 @app.route('/ping', methods=['GET'])
 def ping():
     client_ip = request.remote_addr
     increment_packet_count(client_ip)
     url = f"http://{ip_gwi}:{local_port}/ping"
-    send_with_tos("GET", url, None, client_ip)
-    print(f"[INFO] Requête envoyée par {client_ip}")
-    return "", 201
+    response_data = send_with_tos("GET", url, None, client_ip)
+    if response_data:
+        return response_data, 201
+    else:
+        return jsonify({"error": "Request failed"}), 500
 
 @app.route('/health', methods=['GET'])
 def health():
     client_ip = request.remote_addr
     increment_packet_count(client_ip)
     url = f"http://{ip_gwi}:{local_port}/health"
-    send_with_tos("GET", url, None, client_ip)
-    print(f"[INFO] Requête envoyée par {client_ip}")
-    return "", 201
+    response_data = send_with_tos("GET", url, None, client_ip)
+    if response_data:
+        return response_data, 201
+    else:
+        return jsonify({"error": "Request failed"}), 500
 
 def increment_packet_count(addr):
     global packet_count
