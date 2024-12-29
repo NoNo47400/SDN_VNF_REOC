@@ -16,23 +16,23 @@ Il est conseillé de créer les images dockers (voir docker/README.md) avant de 
 ## Structure du projet
 
 
-├── docker/                      # Dossier qui contient tous les dockerfile
-│   ├── application.Dockerfile
-│   ├── application.js      
-│   ├── create_docker.py        
-│   ├── device.Dockerfile
-│   ├── device.js
-│   ├── gateway_final.Dockerfile
-│   ├── gateway_intermediaire_vnf.Dockerfile
-│   ├── gateway_intermediaire.Dockerfile
-│   ├── gateway.js
-│   ├── README.md
-│   ├── server.Dockerfile
-│   ├── server.js
-│   ├── vnf_monitoring.Dockerfile
-│   ├── vnf_monitoring.py 
-├── sdn/                         # Dossier qui contient les launchers des vnfs
-│   ├── launch_vnf_gi.py
-│   ├── launch_vnf_monitoring.py
-├── README.md
-└── topology.py                  # Toplogie de l'infrastructure réseau simlulé
+├── docker/                      # Dossier qui contient tous les dockerfile                       
+│   ├── application.Dockerfile                 
+│   ├── application.js                                   
+│   ├── create_docker.py                              
+│   ├── device.Dockerfile                         
+│   ├── device.js                       
+│   ├── gateway_final.Dockerfile                        
+│   ├── gateway_intermediaire_vnf.Dockerfile                     
+│   ├── gateway_intermediaire.Dockerfile                    
+│   ├── gateway.js                         
+│   ├── README.md                          
+│   ├── server.Dockerfile                        
+│   ├── server.js                     
+│   ├── vnf_monitoring.Dockerfile                            
+│   ├── vnf_monitoring.py                              
+├── sdn/                         # Dossier qui contient les launchers des vnfs                        
+│   ├── launch_vnf_gi.py                          
+│   ├── launch_vnf_monitoring.py                          
+├── README.md                       
+└── topology.py                  # Toplogie de l'infrastructure réseau simlulé                     
