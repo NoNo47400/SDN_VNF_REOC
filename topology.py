@@ -33,11 +33,6 @@ def create_topology():
     rapi1.connectDatacenter(dc1)
     rapi1.start()
 
-    # On va communiquer avec le VIM via l'API REST pour faire nos demandes de créations de container tout ça
-    # On va aussi communiquer avec le SDN controller qui est automatiquement créé par mininet il faut trouver comment lui parler
-    # Notre script tournera à l'exterieur comme le VIM et le SDN afin de faire nos requetes
-    # Le datacenter c'est pour que le vim puisse créer des VNF et les gérer
-
     # Ajout des switches SDN
     switch_app = net.addSwitch('s1')
     switch_srv = net.addSwitch('s2')
@@ -67,10 +62,10 @@ def create_topology():
     dev2_gF2 = net.addDocker('dev2_gF2', ip='10.0.0.22/24', dimage='dev2_gf2-image', mac='00:00:00:00:22:00', dcmd='node device.js --local_ip 0.0.0.0 --local_port 9001 --local_name "device2_gf2" --remote_ip 10.0.0.20 --remote_port 8282 --remote_name "gwf2" --send_period 3000')
     dev3_gF2 = net.addDocker('dev3_gF2', ip='10.0.0.23/24', dimage='dev3_gf2-image', mac='00:00:00:00:23:00', dcmd='node device.js --local_ip 0.0.0.0 --local_port 9001 --local_name "device3_gf2" --remote_ip 10.0.0.20 --remote_port 8282 --remote_name "gwf2" --send_period 3000')
 
-    # gatewayFinal3 = net.addDocker('gF3', ip='10.0.0.30/24', dimage='gateway_final3-image', mac='00:00:00:00:30:00', dcmd='node gateway.js --local_ip 0.0.0.0 --local_port 8282 --local_name "gwf3" --remote_ip 10.0.0.1 --remote_port 8181 --remote_name "gwi"')
-    # dev1_gF3 = net.addDocker('dev1_gF3', ip='10.0.0.31/24', dimage='dev1_gf3-image', mac='00:00:00:00:31:00', dcmd='node device.js --local_ip 0.0.0.0 --local_port 9001 --local_name "device1_gf3" --remote_ip 10.0.0.30 --remote_port 8282 --remote_name "gwf3" --send_period 3000')
-    # dev2_gF3 = net.addDocker('dev2_gF3', ip='10.0.0.32/24', dimage='dev2_gf3-image', mac='00:00:00:00:32:00', dcmd='node device.js --local_ip 0.0.0.0 --local_port 9001 --local_name "device2_gf3" --remote_ip 10.0.0.30 --remote_port 8282 --remote_name "gwf3" --send_period 3000')
-    # dev3_gF3 = net.addDocker('dev3_gF3', ip='10.0.0.33/24', dimage='dev3_gf3-image', mac='00:00:00:00:33:00', dcmd='node device.js --local_ip 0.0.0.0 --local_port 9001 --local_name "device3_gf3" --remote_ip 10.0.0.30 --remote_port 8282 --remote_name "gwf3" --send_period 3000')
+    gatewayFinal3 = net.addDocker('gF3', ip='10.0.0.30/24', dimage='gateway_final3-image', mac='00:00:00:00:30:00', dcmd='node gateway.js --local_ip 0.0.0.0 --local_port 8282 --local_name "gwf3" --remote_ip 10.0.0.1 --remote_port 8181 --remote_name "gwi"')
+    dev1_gF3 = net.addDocker('dev1_gF3', ip='10.0.0.31/24', dimage='dev1_gf3-image', mac='00:00:00:00:31:00', dcmd='node device.js --local_ip 0.0.0.0 --local_port 9001 --local_name "device1_gf3" --remote_ip 10.0.0.30 --remote_port 8282 --remote_name "gwf3" --send_period 3000')
+    dev2_gF3 = net.addDocker('dev2_gF3', ip='10.0.0.32/24', dimage='dev2_gf3-image', mac='00:00:00:00:32:00', dcmd='node device.js --local_ip 0.0.0.0 --local_port 9001 --local_name "device2_gf3" --remote_ip 10.0.0.30 --remote_port 8282 --remote_name "gwf3" --send_period 3000')
+    dev3_gF3 = net.addDocker('dev3_gF3', ip='10.0.0.33/24', dimage='dev3_gf3-image', mac='00:00:00:00:33:00', dcmd='node device.js --local_ip 0.0.0.0 --local_port 9001 --local_name "device3_gf3" --remote_ip 10.0.0.30 --remote_port 8282 --remote_name "gwf3" --send_period 3000')
 
     # Création des liens
     net.addLink(app1, switch_app)
@@ -84,10 +79,10 @@ def create_topology():
     net.addLink(switch_gi, switch_gf)
     net.addLink(switch_gf, gatewayFinal1)
     net.addLink(switch_gf, gatewayFinal2)
-    # net.addLink(switch_gf, gatewayFinal3)
+    net.addLink(switch_gf, gatewayFinal3)
     net.addLink(switch_gf, switch_gf1_dev)
     net.addLink(switch_gf, switch_gf2_dev)
-    # net.addLink(switch_gf, switch_gf3_dev)
+    net.addLink(switch_gf, switch_gf3_dev)
     net.addLink(switch_gf1_dev, gatewayFinal1)
     net.addLink(switch_gf1_dev, dev1_gF1)
     net.addLink(switch_gf1_dev, dev2_gF1)
@@ -96,21 +91,13 @@ def create_topology():
     net.addLink(switch_gf2_dev, dev1_gF2)
     net.addLink(switch_gf2_dev, dev2_gF2)
     net.addLink(switch_gf2_dev, dev3_gF2)
-    # net.addLink(switch_gf3_dev, gatewayFinal3) 
-    # net.addLink(switch_gf3_dev, dev1_gF3)
-    # net.addLink(switch_gf3_dev, dev2_gF3)
-    # net.addLink(switch_gf3_dev, dev3_gF3)
-
-    #net.addLink(switch_gf, switch_srv) à rajouter si redirection du traffic via les switchs dà coté
-
-    # Modification des adresses IP si besoin
-    #gatewayFinal1.cmd('ifconfig dev1-eth0 10.0.0.1/24 up')
+    net.addLink(switch_gf3_dev, gatewayFinal3) 
+    net.addLink(switch_gf3_dev, dev1_gF3)
+    net.addLink(switch_gf3_dev, dev2_gF3)
+    net.addLink(switch_gf3_dev, dev3_gF3)
 
     # Démarrage du réseau
     net.start()
-
-    # Configuration des routes (si nécessaire)
-    # Exemple: gatewayIntermediaire.cmd('route add default gw 10.0.0.1')
 
     # Lancement du CLI pour interagir avec le réseau
     net.CLI()

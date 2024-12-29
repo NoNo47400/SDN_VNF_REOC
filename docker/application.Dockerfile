@@ -16,10 +16,7 @@ RUN npm install yargs
 # Install bash (necessary for debugging or running commands interactively)
 RUN apk add --no-cache bash curl tcpdump
 
-EXPOSE 9001
+EXPOSE 9191
 
 # Copy the JavaScript program file into the container
-COPY device.js .
-
-# Command to run the application
-#CMD ["node", "device.js", "--local_ip", "0.0.0.0", "--local_port", "9001", "--local_name", "${DEVICE_NAME}", "--remote_ip", "10.0.0.20", "--remote_port", "8282", "--remote_name", "gwf1", "--send_period", "300"]
+COPY application.js .

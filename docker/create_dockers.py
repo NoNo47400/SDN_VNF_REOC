@@ -87,15 +87,6 @@ def build_and_run_images():
             '-f', dockerfile_path, base_dir
         ], check=True)
 
-        # Run the Docker container with a specific IP address
-        # container_name = f'{service}-container'
-        # print(f'Running {container_name} with IP {ip_address}')
-        # subprocess.run([
-        #     'docker', 'run', '-d', '--name', container_name,
-        #     '--network', network_name, '--ip', ip_address,
-        #     image_name
-        # ], check=True)
-
 if __name__ == "__main__":
     kill_all_docker_containers()
     cleanup_docker()

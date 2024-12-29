@@ -20,6 +20,3 @@ EXPOSE 8282
 
 # Copy the JavaScript program file into the container
 COPY gateway.js .
-
-# Command to run the application
-#CMD ["node", "gateway.js", "--local_ip", "0.0.0.0", "--local_port", "8282", "--local_name", "${GWF_NAME}", "--remote_ip", "10.0.0.1", "--remote_port", "8181", "--remote_name", "gwi"]

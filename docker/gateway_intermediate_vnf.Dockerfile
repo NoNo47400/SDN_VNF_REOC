@@ -22,4 +22,4 @@ EXPOSE 8181
 COPY gateway.js .
 
 # Command to run the application
-#CMD ["node", "gateway.js", "--local_ip", "127.0.0.1", "--local_port", "8181", "--local_name", "${GWI_NAME}", "--remote_ip", "10.0.0.100", "--remote_port", "8080", "--remote_name", "srv"]
+CMD ["node", "gateway.js", "--local_ip", "0.0.0.0", "--local_port", "8181", "--local_name", "gwi2", "--remote_ip", "10.0.0.100", "--remote_port", "8080", "--remote_name", "srv"]
