@@ -23,9 +23,9 @@ Pour lancer la vnf de monitoring, lancez simplement:
 sudo python3 launch_vnf_monitoring.py
 ```
 
-Pour lancer la gateway intermediaire vnf, lancez simplement:
+Pour lancer la gateway intermediaire vnf, lancez simplement la commande suivante en précisant le dscp (le dscp est égal au numéro de la zone ex: zone1: dscp=1):
 ```bash
-sudo python3 launch_vnf_gi.py
+sudo python3 launch_vnf_gi.py <dscp> 
 ```
 
 Il est conseillé de lancer la topologie avant de lancer les vnfs (voir ../README.md)

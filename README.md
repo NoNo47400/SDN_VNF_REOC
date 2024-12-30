@@ -11,7 +11,9 @@ Pour démarrer la topologie, lancez simplement:
 sudo python3 topology.py
 ```
 
-Il est conseillé de créer les images dockers (voir docker/README.md) avant de lancer la topologie.
+Il est conseillé de créer les images dockers (voir docker/README.md) avant de lancer la topologie.           
+
+Vous pourrez ensuite utiliser l'interface utilisateur pour intéragir avec la simulation (voir GUI/README.md)         
 
 ## Structure du projet
 
@@ -30,7 +32,12 @@ Il est conseillé de créer les images dockers (voir docker/README.md) avant de 
 │   ├── server.Dockerfile                        
 │   ├── server.js                     
 │   ├── vnf_monitoring.Dockerfile                            
-│   ├── vnf_monitoring.py                              
+│   ├── vnf_monitoring.py                   
+├── GUI/                         # Dossier qui contient les fichiers nécessaires pour l'interface utilisateur                       
+│   ├── app.py              
+│   ├── index.html     
+│   ├── README.md                 
+│   ├── styles.css               
 ├── sdn/                         # Dossier qui contient les launchers des vnfs                        
 │   ├── launch_vnf_gi.py                          
 │   ├── launch_vnf_monitoring.py                          

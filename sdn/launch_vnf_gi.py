@@ -1,5 +1,6 @@
 import requests
 import json
+import argparse
 
 def create_vnf_gi():
     # On créé le vnf gateway intermediaire et on récupère son adresse mac
@@ -22,8 +23,8 @@ def create_vnf_gi():
         print(f"Erreur dans la création du VNF : {response.status_code}")
     return None
 
-def modify_request_vnf_to_new_gi(tos, mac_dst):
-    # On ajoute une règle dans le switch présent dans le datacenter pour rediriger le traffic de la zone 1 en sortie du vnf de monitoring vers notre gateway vnf 
+def modify_request_vnf_to_new_gi(dscp, mac_dst):
+    # On ajoute une règle dans le switch présent dans le datacenter pour rediriger le traffic de la zone x en sortie du vnf de monitoring vers notre gateway vnf 
     url = "http://localhost:8080/stats/flowentry/add"
     headers = {'Content-Type': 'application/json'}
     data = {
@@ -33,7 +34,7 @@ def modify_request_vnf_to_new_gi(tos, mac_dst):
             "in_port": 2,
                 "nw_src": "10.0.0.200", 
                 "nw_dst": "10.0.0.1",
-                "ip_dscp": tos, # tos = dscp<<2
+                "ip_dscp": dscp, # tos = dscp<<2
                 "dl_type": 2048                
             },
         "actions": [
@@ -87,12 +88,15 @@ def get_sdn_flows():
     else:
         print(f"Erreur lors de la récupération des flux SDN : {response.status_code}")
 
-def main():
+def main(dscp):
     mac_address = create_vnf_gi()
     if mac_address:
-        modify_request_vnf_to_new_gi(1, mac_address)
+        modify_request_vnf_to_new_gi(dscp, mac_address)
         modify_request_new_gi_to_vnf()
         get_sdn_flows()
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Script de gestion des VNFs avec des règles SDN.")
+    parser.add_argument("dscp", type=int, help="Valeur DSCP pour les règles SDN.")
+    args = parser.parse_args()
+    main(args.dscp)

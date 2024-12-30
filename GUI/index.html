@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REOC GUI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <button id="launch-vnf-monitoring" class="btn">Launch VNF Monitoring</button>
+        <div class="dropdown-container">
+            <button id="launch-vnf-gi" class="btn hidden">Launch VNF Gateway</button>
+            <select id="dscp-select" class="hidden">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+            </select>
+        </div>
+        <button id="get-bitrate" class="btn hidden">Get bitrate from monitoring</button>
+        <button id="docker-logs-service" class="btn">Get Docks log for service</button>
+        <button id="docker-logs-gi" class="btn">Get Docks log for intermediate gateway</button>
+        <button id="docker-logs-vnf-monitoring" class="btn hidden">Get Docks log for vnf monitoring</button>
+        <button id="docker-logs-gi-vnf" class="btn hidden">Get Docks log for vnf intermediate gateway</button>
+        
+        <textarea id="output" readonly placeholder="Result..." rows="15"></textarea>
+    </div>
+    <script>
+        const output = document.getElementById('output');
+        const launchVNFMonitoringButton = document.getElementById('launch-vnf-monitoring');
+        const launchVNFGiButton = document.getElementById('launch-vnf-gi');
+        const dscpSelect = document.getElementById('dscp-select');
+        const runCurlButton = document.getElementById('get-bitrate');
+        const dockerLogsServiceButton = document.getElementById('docker-logs-service');
+        const dockerLogsGiButton = document.getElementById('docker-logs-gi');
+        const dockerLogsVNFMonitoringButton = document.getElementById('docker-logs-vnf-monitoring');
+        const dockerLogsVNFGiButton = document.getElementById('docker-logs-gi-vnf');
+
+        // Appeler les API Flask pour chaque bouton
+        launchVNFMonitoringButton.addEventListener('click', () => {
+            fetch('/launch-vnf-monitoring')
+                .then(response => response.text())
+                .then(result => {
+                    output.value = result;
+                    launchVNFMonitoringButton.classList.add('hidden');
+                    launchVNFGiButton.classList.remove('hidden');
+                    dscpSelect.classList.remove('hidden');
+                    dockerLogsVNFMonitoringButton.classList.remove('hidden');
+                    runCurlButton.classList.remove('hidden');
+                });
+        });
+
+        launchVNFGiButton.addEventListener('click', () => {
+            const dscp = dscpSelect.value;
+            fetch(`/launch-vnf-gi/${dscp}`)
+                .then(response => response.text())
+                .then(result => {
+                    output.value = result;
+                    launchVNFGiButton.classList.add('hidden');
+                    dscpSelect.classList.add('hidden');
+                    dockerLogsVNFGiButton.classList.remove('hidden');
+                });
+        });
+
+        runCurlButton.addEventListener('click', () => {
+            fetch('/get-bitrate')
+                .then(response => response.text())
+                .then(result => {
+                    output.value = result;
+                });
+        });
+
+        dockerLogsServiceButton.addEventListener('click', () => {
+            fetch('/docker-logs/service')
+                .then(response => response.text())
+                .then(result => {
+                    output.value = result;
+                });
+        });
+
+        dockerLogsGiButton.addEventListener('click', () => {
+            fetch('/docker-logs/gi')
+                .then(response => response.text())
+                .then(result => {
+                    output.value = result;
+                });
+        });
+
+        dockerLogsVNFMonitoringButton.addEventListener('click', () => {
+            fetch('/docker-logs/vnf-monitoring')
+                .then(response => response.text())
+                .then(result => {
+                    output.value = result;
+                });
+        });
+
+        dockerLogsVNFGiButton.addEventListener('click', () => {
+            fetch('/docker-logs/gi-vnf')
+                .then(response => response.text())
+                .then(result => {
+                    output.value = result;
+                });
+        });
+    </script>
+</body>
+</html>
