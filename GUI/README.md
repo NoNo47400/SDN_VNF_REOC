@@ -9,7 +9,7 @@ De plus, il est aussi possible de lancer la vnf de monitoring ainsi que la vnf g
 
 Pensez à bien démarrer la topologie avant.      
 
-Pour démarrer l'application il suffit de lancer la commande suivante et de vous taper dans une page web en dehors de la machine virtuelle http://localhost:1234/:     
+Pour démarrer l'application il suffit de lancer la commande suivante et de taper dans une page web en dehors de la machine virtuelle http://localhost:1234/:     
 ```bash
 python3 app.py
 ```
